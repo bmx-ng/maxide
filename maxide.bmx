@@ -3233,9 +3233,9 @@ Type TByteBuffer Extends TStream
 	Method Read:Long( buf:Byte Ptr,count:Long )
 		If count>readpointer count=readpointer
 		If Not count Return
-		MemCopy buf,bytes,count
+		MemCopy buf,bytes,Size_T(count)
 		readpointer:-count
-		If readpointer MemMove bytes,Varptr bytes[count],readpointer
+		If readpointer MemMove bytes,Varptr bytes[count],Size_T(readpointer)
 		Return count
 	End Method
 	
@@ -3269,7 +3269,7 @@ Type TByteBuffer Extends TStream
 			m=Max(bytes.length*1.5,n)
 			bytes=bytes[..m]
 		EndIf
-		MemCopy Varptr bytes[readpointer],buf,count
+		MemCopy Varptr bytes[readpointer],buf,Size_T(count)
 		readpointer=n
 		Return count
 	End Method	
