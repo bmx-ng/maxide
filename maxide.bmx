@@ -38,11 +38,11 @@ Import bah.maxguitextareascintilla
 ?
 Import MaxGUI.ProxyGadgets
 
-?Win32x86
-Import "maxicons.o"
-?Win32x64
-Import "maxicons64.o"
-?
+'?Win32x86
+'Import "maxicons.o"
+'?Win32x64
+'Import "maxicons64.o"
+'?
 
 Import brl.eventqueue
 Import brl.filesystem
@@ -202,6 +202,7 @@ Const MENURASPBERRYPIENABLED=84
 Const MENUANDROIDENABLED=85
 Const MENUEMSCRIPTENENABLED=86
 Const MENUIOSENABLED=87
+Const MENUNXENABLED=88
 
 Const MENUARCHITECTURE=90
 Const MENUX86ENABLED=91
@@ -5561,8 +5562,9 @@ Type TCodePlay
 	Field raspberrypienable:TGadget	'menu
 	Field androidenable:TGadget	'menu
 	Field emscriptenenable:TGadget	'menu
+	Field nxenable:TGadget	'menu
 	
-	Field platformenabled:Int[7]
+	Field platformenabled:Int[8]
 	Const PLATFORMOFFSET:Int = 81
 
 	Field x86enable:TGadget	'menu
@@ -6642,6 +6644,7 @@ Type TCodePlay
 ?Not raspberrypi
 		androidenable=CreateMenu("{{menu_program_platform_android}}",MENUANDROIDENABLED,platform)
 ?
+		nxenable=CreateMenu("{{menu_program_platform_nx}}",MENUNXENABLED,platform)
 		emscriptenenable=CreateMenu("{{menu_program_platform_emscripten}}",MENUEMSCRIPTENENABLED,platform)
 
 		architecture=CreateMenu("{{menu_program_arch}}",0,program)
@@ -6969,7 +6972,7 @@ Type TCodePlay
 				UpdateWindowMenu window
 
 			Case MENUWIN32ENABLED, MENULINUXENABLED, MENUMACOSXENABLED, MENURASPBERRYPIENABLED, ..
-					MENUANDROIDENABLED, MENUEMSCRIPTENENABLED, MENUIOSENABLED
+					MENUANDROIDENABLED, MENUEMSCRIPTENENABLED, MENUIOSENABLED, MENUNXENABLED
 
 				UpdatePlatformMenus(menu)
 				
@@ -7068,6 +7071,8 @@ Type TCodePlay
 						UncheckMenu androidenable
 					Case MENUEMSCRIPTENENABLED
 						UncheckMenu emscriptenenable
+					Case MENUNXENABLED
+						UncheckMenu nxenable
 				End Select
 			End If
 			platformenabled[i] = False
@@ -7089,6 +7094,8 @@ Type TCodePlay
 				CheckMenu androidenable
 			Case MENUEMSCRIPTENENABLED
 				CheckMenu emscriptenenable
+			Case MENUNXENABLED
+				CheckMenu nxenable
 		End Select
 		
 		UpdateArchitectureMenuState menu
@@ -7192,6 +7199,8 @@ Type TCodePlay
 				EnableMenu arm64v8aenable
 			Case MENUEMSCRIPTENENABLED
 				EnableMenu jsenable
+			Case MENUNXENABLED
+				EnableMenu arm64enable
 		End Select
 	End Method
 
@@ -7261,6 +7270,9 @@ Type TCodePlay
 			Case MENUEMSCRIPTENENABLED
 				CheckMenu jsenable
 				architectureenabled[MENUJSENABLED - ARCHITECTUREOFFSET] = True
+			Case MENUNXENABLED
+				CheckMenu arm64enable
+				architectureenabled[MENUARM64ENABLED - ARCHITECTUREOFFSET] = True
 		End Select
 	End Method
 	
@@ -7282,6 +7294,8 @@ Type TCodePlay
 						Return "android"
 					Case MENUEMSCRIPTENENABLED
 						Return "emscripten"
+					Case MENUNXENABLED
+						Return "nx"
 				End Select
 			End If
 		Next
