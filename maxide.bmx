@@ -151,7 +151,7 @@ Const MENUBUILDALLMODULES=32
 
 Const MENUQUICKENABLED=33
 Const MENUDEBUGENABLED=34
-Const MENUGUIENABLED=35
+'Const MENUGUIENABLED=35
 
 Const MENUCOMMANDLINE=36
 'Const MENUSYNCMODS=37
@@ -193,6 +193,10 @@ Const MENUUNIVERSALENABLED=64
 Const MENUWARNOVERENABLED=65
 Const MENUGDBDEBUGENABLED=66
 
+Const MENUAPPOPTIONS=70
+Const MENUCONSOLEENABLED=71
+Const MENUGUIENABLED=72
+Const MENUMAKELIBENABLED=73
 
 Const MENUPLATFORM=80
 Const MENUWIN32ENABLED=81
@@ -5216,15 +5220,19 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,gui,run, verbose, quickscan, universal, warnover, gdbdebug, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
-			cmd$:+" makeapp"
+			If guiBuild Or consoleBuild Then
+				cmd$:+" makeapp"
+			Else
+				cmd:+" makelib"
+			End If
 			If run cmd$:+" -x"
 			If debug cmd$:+" -d" Else cmd$:+" -r"	'-v
 			If threaded cmd$:+" -h"
-			If gui cmd$:+" -t gui"
+			If guiBuild cmd$:+" -t gui"
 			If Not quick cmd$:+" -a"
 			If verbose cmd :+ " -v"
 			If quickscan cmd :+ " -quick"
@@ -5341,9 +5349,9 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLREPLACE
 				Return FindReplace(String(argument))	
 			Case TOOLBUILD
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.guienabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.guienabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
@@ -5536,7 +5544,9 @@ Type TCodePlay
 	Field quickenable:TGadget,quickenabled	'menu,state
 	Field debugenable:TGadget,debugenabled	'menu,state
 	Field threadedenable:TGadget,threadedenabled
+	Field consoleenable:TGadget,consoleenabled		'menu,state
 	Field guienable:TGadget,guienabled		'menu,state
+	Field makelibenable:TGadget,makelibenabled		'menu,state
 	Field verboseenable:TGadget,verboseenabled		'menu,state
 	Field quickscanenable:TGadget,quickscanenabled		'menu,state
 	Field universalenable:TGadget,universalenabled		'menu,state
@@ -5695,7 +5705,9 @@ Type TCodePlay
 		quickenabled=False
 		debugenabled=True
 		threadedenabled=False
+		consoleenabled=False
 		guienabled=True
+		makelibenabled=False
 		verboseenabled=False
 		quickscanenabled=True
 		universalenabled=False
@@ -5730,7 +5742,7 @@ Type TCodePlay
 			EndIf
 			Return
 		EndIf
-		options.read(stream)		
+		options.Read(stream)		
 		options.Snapshot
 
 		Local projdata:TList
@@ -5754,8 +5766,12 @@ Type TCodePlay
 					debugenabled=Int(b$)
 				Case "prg_threaded"
 					threadedenabled=Int(b$)
+				Case "prg_console"
+					consoleenabled=Int(b$)
 				Case "prg_gui"
 					guienabled=Int(b$)
+				Case "prg_makelib"
+					makelibenabled=Int(b$)
 				Case "prg_verbose"
 					verboseenabled=Int(b$)
 				Case "prg_quickscan"
@@ -5822,7 +5838,9 @@ Type TCodePlay
 		stream.WriteLine "prg_quick="+quickenabled
 		stream.WriteLine "prg_debug="+debugenabled
 		stream.WriteLine "prg_threaded="+threadedenabled
+		stream.WriteLine "prg_console="+consoleenabled
 		stream.WriteLine "prg_gui="+guienabled
+		stream.WriteLine "prg_makelib="+makelibenabled
 		stream.WriteLine "prg_verbose="+verboseenabled
 		stream.WriteLine "prg_quickscan="+quickscanenabled
 		stream.WriteLine "prg_universal="+universalenabled
@@ -6527,6 +6545,7 @@ Type TCodePlay
 		Local help:TGadget,buildoptions:TGadget,devoptions:TGadget
 		Local buildmods:TGadget,buildallmods:TGadget,syncmods:TGadget,docmods:TGadget
 		Local platform:TGadget,architecture:TGadget
+		Local appoptions:TGadget
 
 		Local MENUMOD=MODIFIER_COMMAND
 
@@ -6620,15 +6639,17 @@ Type TCodePlay
 			Or (FileType( BlitzMaxpath()+"/mod/brl.mod/blitz.mod/bdwgc" )=FILETYPE_DIR)
 				threadedenable=CreateMenu("{{menu_program_buildoptions_threaded}}",MENUTHREADEDENABLED,buildoptions)
 		EndIf
-		guienable=CreateMenu("{{menu_program_buildoptions_guiapp}}",MENUGUIENABLED,buildoptions)
+		
+		appoptions=CreateMenu("{{menu_program_appoptions}}",0,program)
+		consoleenable=CreateMenu("{{menu_program_buildoptions_consoleapp}}",MENUCONSOLEENABLED,appoptions)
+		guienable=CreateMenu("{{menu_program_buildoptions_guiapp}}",MENUGUIENABLED,appoptions)
+		makelibenable=CreateMenu("{{menu_program_buildoptions_makelib}}",MENUMAKELIBENABLED,appoptions)
+
 		quickscanenable=CreateMenu("{{menu_program_buildoptions_quickscan}}",MENUQUICKSCANENABLED,buildoptions)
 ?macos
 		universalenable=CreateMenu("{{menu_program_buildoptions_universal}}",MENUUNIVERSALENABLED,buildoptions)
 ?
 		warnoverenable=CreateMenu("{{menu_program_buildoptions_warnover}}",MENUWARNOVERENABLED,buildoptions)
-		devoptions=CreateMenu("{{menu_program_buildoptions_dev}}",0,buildoptions)
-		verboseenable=CreateMenu("{{menu_program_buildoptions_verbose}}",MENUVERBOSEENABLED,devoptions)
-		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
 
 		platform=CreateMenu("{{menu_program_platform}}",0,program)
 ?Not raspberrypi
@@ -6661,6 +6682,10 @@ Type TCodePlay
 
 		appstubmenu=CreateMenu("{{menu_program_appstub}}",0,program)
 		
+		devoptions=CreateMenu("{{menu_program_buildoptions_dev}}",0,program)
+		verboseenable=CreateMenu("{{menu_program_buildoptions_verbose}}",MENUVERBOSEENABLED,devoptions)
+		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
+
 		CreateMenu "",0,program
 		CreateMenu "{{menu_program_lockbuildfile}}",MENULOCKBUILD,program
 		CreateMenu "{{menu_program_unlockbuildfile}}",MENUUNLOCKBUILD,program
@@ -6681,7 +6706,9 @@ Type TCodePlay
 		If quickenabled CheckMenu quickenable
 		If debugenabled CheckMenu debugenable
 		If threadedenabled CheckMenu threadedenable
+		If consoleenabled CheckMenu consoleenable
 		If guienabled CheckMenu guienable
+		If makelibenabled CheckMenu makelibenable
 		If verboseenabled CheckMenu verboseenable
 		If quickscanenabled CheckMenu quickscanenable
 		If universalenabled CheckMenu universalenable
@@ -6719,7 +6746,7 @@ Type TCodePlay
 			DisableMenu buildallmods
 		EndIf
 
-?		
+?
 '		If is_demo
 '			DisableMenu syncmods
 '		EndIf
@@ -6912,12 +6939,38 @@ Type TCodePlay
 				UpdateWindowMenu window
 				
 			Case MENUGUIENABLED
-				If guienabled
-					guienabled=False
-					UncheckMenu guienable							
-				Else
+				If Not guienabled
 					guienabled=True
 					CheckMenu guienable
+					
+					consoleenabled=False
+					UncheckMenu consoleenable
+					makelibenabled=False
+					UncheckMenu makelibenable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUCONSOLEENABLED
+				If Not consoleenabled
+					consoleenabled=True
+					CheckMenu consoleenable
+					
+					guienabled=False
+					UncheckMenu guienable
+					makelibenabled=False
+					UncheckMenu makelibenable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUMAKELIBENABLED
+				If Not makelibenabled
+					makelibenabled=True
+					CheckMenu makelibenable
+					
+					consoleenabled=False
+					UncheckMenu consoleenable
+					guienabled=False
+					UncheckMenu guienable
 				EndIf
 				UpdateWindowMenu window
 
@@ -7172,6 +7225,7 @@ Type TCodePlay
 		DisableMenu jsenable
 		DisableMenu armv7enable
 		DisableMenu arm64enable
+		DisableMenu makelibenable
 
 		Select platformMenu
 			Case MENUWIN32ENABLED, MENULINUXENABLED
@@ -7202,6 +7256,19 @@ Type TCodePlay
 			Case MENUNXENABLED
 				EnableMenu arm64enable
 		End Select
+
+		Select platformMenu
+			Case MENUWIN32ENABLED
+				EnableMenu makelibenable
+			Default
+				If makelibenabled Then
+					UncheckMenu makelibenable
+					makelibenabled = False
+					CheckMenu guienable
+					guienabled = True
+				End If
+		End Select
+
 	End Method
 
 	Method DefaultArchitectureMenuForPlatform(platformMenu:Int)
