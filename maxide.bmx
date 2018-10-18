@@ -6365,7 +6365,7 @@ Type TCodePlay
 		
 		CheckVersion()
 		
-		splash=CreateWindow("MaxIDE",200,200,400,140,Null,WINDOW_CLIENTCOORDS|WINDOW_HIDDEN|WINDOW_CENTER)
+		splash=CreateWindow("MaxIDE",200,200,400,160,Null,WINDOW_CLIENTCOORDS|WINDOW_HIDDEN|WINDOW_CENTER)
 			Local panel:TGadget = CreatePanel(0,0,ClientWidth(splash),ClientHeight(splash),splash,0)
 			SetPanelColor panel,255,255,255;SetPanelPixmap panel, LoadPixmapPNG("incbin::splash.png"), PANELPIXMAP_FIT2
 			Local progress:TGadget = CreateProgBar(2,ClientHeight(panel)-22,ClientWidth(panel)-4,20,panel)
@@ -6390,7 +6390,6 @@ Type TCodePlay
 		aboutreq=TAboutRequester.Create(Self)
 		
 		UpdateProgBar progress, 0.1;PollSystem
-		
 		ReadConfig()
 
 		toolbar=CreateToolBar("incbin::toolbar.png",0,0,0,0,window )
