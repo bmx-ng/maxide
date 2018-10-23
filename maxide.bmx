@@ -5820,6 +5820,11 @@ Type TCodePlay
 					'syncmodsreq.FromString b$
 			End Select
 		Wend
+		
+		If Not guienabled And Not makelibenabled Then
+			consoleenabled = True
+		End If
+		
 		stream.close()		
 	End Method
 	
