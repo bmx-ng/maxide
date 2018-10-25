@@ -1,4 +1,4 @@
-' maxide.bmx 
+' maxide.bmx
 
 ' BlitzMax native integrated development environment
 
@@ -10,10 +10,10 @@
 ' to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ' copies of the Software, and to permit persons to whom the Software is
 ' furnished to do so, subject to the following conditions:
-' 
+'
 ' The above copyright notice and this permission notice shall be included in
 ' all copies or substantial portions of the Software.
-' 
+'
 ' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ' IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ' FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -91,12 +91,8 @@ Global BCC_VERSION$="{unknown}"	'not valid until codeplay opened
 Const EOL$="~n"
 
 Const ABOUT$=..
-"{bcc_version} - Copyright Blitz Research Ltd.~n~n"+..
-"Please visit www.blitzbasic.com for all your Blitz related needs!"
-
-Const ABOUTDEMO$=..
-"This demo features both the core BlitzMax package and optional MaxGUI module.~n~n"+..
-"Please note that the MaxGUI module must be purchased separately."
+"{bcc_version}.~n~n"+..
+"Please visit www.blitzmax.org for all your BlitzMax related needs!"
 
 Const FileTypes$="bmx,bbdoc,txt,ini,doc,plist,bb,cpp,c,cc,m,cxx,s,glsl,hlsl,lua,py,h,hpp,html,htm,css,js,bat,sh,mm,as,java,bbx,cx"
 Const FileTypeFilters$="Code Files:"+FileTypes$+";All Files:*"
@@ -155,7 +151,6 @@ Const MENUDEBUGENABLED=34
 'Const MENUGUIENABLED=35
 
 Const MENUCOMMANDLINE=36
-'Const MENUSYNCMODS=37
 Const MENUIMPORTBB=38
 Const MENUFINDINFILES=39
 Const MENUPROJECTMANAGER=40
@@ -248,14 +243,8 @@ Const TAB$=Chr(9)
 Const QUOTES$=Chr(34)
 
 Global TEMPCOUNT
-Global is_demo
 Global codeplay:TCodePlay
 
-Function CheckDemo()
-	If Not is_demo Return 1
-	Notify LocalizeString("{{notify_demo_featureunavailable}}")
-	Return 0
-End Function
 
 Global defaultLanguage:TMaxGUILanguage = LoadLanguage( DEFAULT_LANGUAGEPATH )
 
@@ -277,13 +266,13 @@ Function Quote$(a$)		'add quotes to arg if spaces found
 	If a[0]=34 Return a	'already quoted
 	p=a.find(" ")
 	If p=-1 Return a	'no spaces
-	Return Chr(34)+a+Chr(34)		
+	Return Chr(34)+a+Chr(34)
 End Function
 
 Type TToken
 	Field token$
 	Field help$
-	Field ref$	
+	Field ref$
 	Method Create:TToken(t$,h$,r$)
 		token=t
 		help=h
@@ -294,26 +283,26 @@ End Type
 
 Type TQuickHelp
 	Field map:TMap=New TMap	'key=lower(token) value=token:TToken
-		
+
 	Method AddCommand:TQuickHelp(t$,l$,a$)
 		map.Insert t.ToLower(),New TToken.Create(t$,l$,a$)
 	End Method
-	
+
 	Method Token$(cmd$)
 		Local t:TToken = TToken(map.ValueForKey(cmd.toLower()))
 		If t Return t.token
 	End Method
-	
+
 	Method Help$(cmd$)
 		Local t:TToken = TToken(map.ValueForKey(cmd.toLower()))
 		If t Return t.help
 	End Method
-	
+
 	Method Link$(cmd$)
 		Local t:TToken = TToken(map.ValueForKey(cmd.toLower()))
 		If t Return t.ref
 	End Method
-	
+
 	Function LoadCommandsTxt:TQuickHelp(bmxpath$)
 		Local	Text$
 		Local	qh:TQuickHelp
@@ -342,7 +331,7 @@ Type TQuickHelp
 			If q>=0
 				help=l[..q]
 				anchor=l[q+1..]
-			EndIf			
+			EndIf
 			qh.AddCommand token,help,anchor
 		Next
 		Return qh
@@ -389,7 +378,7 @@ Type TTool
 End Type
 
 Type TRequester
-	
+
 	Const STYLE_OK% = 1, STYLE_CANCEL% = 2
 	Const STYLE_DIVIDER% = 4, STYLE_STATUS% = 8
 	Const STYLE_RESIZABLE% = 16, STYLE_STDBORDER% = 32
@@ -400,54 +389,54 @@ Type TRequester
 	Field	centered, modal
 
 	Method initrequester(owner:TCodeplay,label$,w=260,h=60,flags=STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,oktext$="{{btn_ok}}")
-		
+
 		host=owner
 		If (flags&STYLE_MODAL) Then flags:|STYLE_STDBORDER
-		
+
 		If (flags & (STYLE_CANCEL|STYLE_OK)) Then h:+ScaledSize(32);If (flags&STYLE_DIVIDER) Then h:+ScaledSize(12)
-		
+
 		Local windowflags% = WINDOW_TITLEBAR|WINDOW_HIDDEN|WINDOW_CLIENTCOORDS
 		If (flags & STYLE_STATUS) Then windowflags:|WINDOW_STATUS
 		If (flags & STYLE_RESIZABLE) Then windowflags:|WINDOW_RESIZABLE
 		If Not (flags & STYLE_STDBORDER) Then windowflags:|WINDOW_TOOL
-		
+
 		window=CreateWindow(label,0,0,w,h,host.window,windowflags)
-		
+
 		If (flags & STYLE_RESIZABLE) Then
 			If (flags & STYLE_STDBORDER) Then SetMaxWindowSize(window,ClientWidth(Desktop()),ClientHeight(Desktop()))
 			SetMinWindowSize(window,w,h)
 		EndIf
-		
+
 		If (flags & STYLE_OK) Then
-			
+
 			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
 			SetGadgetLayout(ok,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
-			
+
 			If (flags & STYLE_CANCEL) Then
 				cancel=CreateButton("{{btn_cancel}}",ScaledSize(6),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_ALIGNED,EDGE_CENTERED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
-			
+
 		Else
 			If (flags & STYLE_CANCEL) Then
 				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 		EndIf
-		
+
 		If (flags & STYLE_DIVIDER) And (flags & (STYLE_OK|STYLE_CANCEL)) Then
 			divider = CreateLabel( "", ScaledSize(6), ClientHeight(window)-ScaledSize(42), ClientWidth(window)-ScaledSize(12), ScaledSize(4), window, LABEL_SEPARATOR )
 			SetGadgetLayout(divider,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 		EndIf
-		
+
 		If (flags & STYLE_MODAL) Then modal = True Else modal = False
-	
+
 	End Method
-	
+
 	Method Show()
 		Local	x,y,w,h,win:TGadget
 		If Not centered
-			win=host.window		
+			win=host.window
 			w=GadgetWidth(window)
 			h=GadgetHeight(window)
 			x=GadgetX(win)+(GadgetWidth(win)-w)/2
@@ -460,7 +449,7 @@ Type TRequester
 		ActivateGadget window
 		PollSystem
 	End Method
-	
+
 	Method Hide()
 		EnableGadget host.window
 		HideGadget window
@@ -480,22 +469,22 @@ Type TProgressRequester Extends TRequester
 	Field	showing
 	Field	label:TGadget
 	Field	progbar:TGadget
-	
+
 	Method Show()	'returns false if cancelled
 		showing=True
 		Super.Show
 	End Method
-	
+
 	Method Hide()
 		showing=False
 		Super.Hide()
 	End Method
-	
+
 	Method Open(title$)
 		SetGadgetText window,title
 		Show
 	End Method
-	
+
 	Method Update(msg$,val)
 		If msg$<>message
 			message=msg
@@ -508,7 +497,7 @@ Type TProgressRequester Extends TRequester
 		EndIf
 		value=val
 	End Method
-	
+
 	Function Create:TProgressRequester(host:TCodePlay)
 		Local	progress:TProgressRequester
 		progress=New TProgressRequester
@@ -523,8 +512,8 @@ Type TPanelRequester Extends TRequester
 	Field	tabber:TGadget
 	Field	panels:TGadget[]
 	Field	index
-	
-	Method InitPanelRequester(owner:TCodeplay,label$,w=280,h=128)		
+
+	Method InitPanelRequester(owner:TCodeplay,label$,w=280,h=128)
 		InitRequester owner,label,w,h,STYLE_OK|STYLE_CANCEL|STYLE_STDBORDER|STYLE_MODAL
 		tabber=CreateTabber(ScaledSize(6),ScaledSize(6),w-ScaledSize(12),h-ScaledSize(12),window)
 		SetGadgetLayout tabber,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
@@ -534,9 +523,9 @@ Type TPanelRequester Extends TRequester
 		HideGadget panels[index]
 		index=i
 		ShowGadget panels[index]
-		SelectGadgetItem tabber,index	
+		SelectGadgetItem tabber,index
 	End Method
-	
+
 	Method SetPanel(panel:TGadget)
 		Local	i
 		For Local p:TGadget = EachIn panels
@@ -544,7 +533,7 @@ Type TPanelRequester Extends TRequester
 			i:+1
 		Next
 	End Method
-	
+
 	Method AddPanel:TGadget(name$)
 		Local	panel:TGadget
 		panel=CreatePanel(0,0,ClientWidth(tabber),ClientHeight(tabber),tabber)
@@ -555,40 +544,40 @@ Type TPanelRequester Extends TRequester
 		panels[panels.length-1]=panel
 		Return panel
 	End Method
-	
+
 	Method RemovePanel(panel)
 	End Method
-	
+
 End Type
 
 Type TAboutRequester Extends TRequester
-	
+
 	Global pixLogo:TPixmap
-	
+
 	Field pnlLogo:TGadget, lblTitle:TGadget, lblSubtitle:TGadget
 	Field lblLeftAligned:TGadget[], lblRightAligned:TGadget[]
 	Field hypBlitz:TGadget
-	
+
 	Method PopulateText()
-		
+
 		Local strHeadings$[], strValues$[]
-		
+
 		strHeadings:+["{{about_label_bccver}}:"]
 		strValues:+[BCC_VERSION]
 
 		strHeadings:+["{{about_label_bmkver}}:"]
 		strValues:+[GetBMK()]
-		
+
 		strHeadings:+[""]
 		strValues:+[""]
-		
+
 		strHeadings:+["{{about_label_bmxpath}}:"]
 		?Win32
 		strValues:+[BlitzMaxPath().Replace("/","\")]
 		?Not Win32
 		strValues:+[BlitzMaxPath()]
 		?
-		
+
 		?Win32
 		strHeadings:+["{{about_label_mingwpath}}:"]
 		' check For Local mingw32 dir First
@@ -600,38 +589,38 @@ Type TAboutRequester Extends TRequester
 			strValues:+[LocalizeString("{{about_error_unavailable}}")]
 		EndIf
 		?
-		
+
 		strHeadings:+[""]
 		strValues:+[""]
-		
+
 		?Not MacOS
 		strHeadings:+["{{about_label_fasmver}}:"]
 		strValues:+[GetFASM()]
 		?
-		
+
 		strHeadings:+["{{about_label_gccver}}:"]
 		strValues:+[GetGCC()]
 
 		strHeadings:+["{{about_label_gplusplusver}}:"]
 		strValues:+[GetGpp()]
-		
+
 		PopulateColumns( strHeadings, strValues )
-	
+
 	EndMethod
-	
+
 	Function GetProcessOutput$(cmd$, flags$ = "")
-		
+
 		Local	version$
-		
+
 		?Win32
 			cmd:+".exe"
 		?
-		
+
 		cmd=Quote(cmd)
 		If flags Then cmd:+" "+flags
-		
+
 		Local	process:TProcess = CreateProcess(cmd,HIDECONSOLE)
-		
+
 		If process
 			Local bytes:Byte[]
 			Local tmpTimeout:Int = MilliSecs() + 500
@@ -646,23 +635,23 @@ Type TAboutRequester Extends TRequester
 
 			Return version.Trim().Replace("~r","")
 		EndIf
-		
+
 		Return LocalizeString("{{about_error_unavailable}}")
-		
+
 	EndFunction
-	
+
 	Method GetFASM$()
 		?Not MacOS
 			Local tmpSections$[] = GetProcessOutput(BlitzMaxPath()+"/bin/fasm").Split("~n")[0].Split(" ")
 			Return tmpSections[tmpSections.length-1]
 		?
 	EndMethod
-	
+
 	Method GetBMK$()
 		Local tmpSections$[] = GetProcessOutput(BlitzMaxPath()+"/bin/bmk", "-v").Split("~n")
 		Return tmpSections[tmpSections.length-1]
 	EndMethod
-	
+
 	Method GetGCC$()
 		?Win32
 		Local gccPath:String = BlitzMaxPath() + "/MinGW32"
@@ -677,7 +666,7 @@ Type TAboutRequester Extends TRequester
 		?
 		Return GetProcessOutput(gccPath, "-dumpversion").Split("~n")[0]
 	EndMethod
-	
+
 	Method GetGpp$()
 		?Win32
 		Local gppPath:String = BlitzMaxPath() + "/MinGW32"
@@ -692,34 +681,34 @@ Type TAboutRequester Extends TRequester
 		?
 		Return GetProcessOutput(gppPath, "-dumpversion").Split("~n")[0]
 	EndMethod
-	
+
 	Method PopulateColumns( strHeadings$[], strValues$[] )
-		
+
 		strHeadings = strHeadings[..lblLeftAligned.length]
 		strValues = strValues[..lblRightAligned.length]
-		
+
 		For Local i:Int = 0 Until lblLeftAligned.length
 			LocalizeGadget( lblLeftAligned[i], strHeadings[i] )
 		Next
-		
+
 		For Local i:Int = 0 Until lblRightAligned.length
 			SetGadgetText( lblRightAligned[i], strValues[i] )
 			SetGadgetToolTip( lblRightAligned[i], strValues[i] )
 		Next
-	
+
 	EndMethod
-	
+
 	Method Show()
 		PopulateText()
 		Super.Show()
 	EndMethod
-	
+
 	Method Poll()
 		Select EventSource()
 			Case window
 				If EventID()=EVENT_WINDOWCLOSE
 					Hide()
-				EndIf			
+				EndIf
 			Case cancel
 				If EventID()=EVENT_GADGETACTION
 					Hide()
@@ -729,23 +718,23 @@ Type TAboutRequester Extends TRequester
 		End Select
 		Return 1
 	End Method
-	
+
 	Function Create:TAboutRequester(host:TCodePlay)
-		
+
 		Local abt:TAboutRequester = New TAboutRequester
 		abt.initrequester(host,"{{about_window_title}}",ScaledSize(420),ScaledSize(277),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		
+
 		Local win:TGadget = abt.window, w = ClientWidth(abt.window)-ScaledSize(12), h = ClientHeight(abt.window)
-		
+
 		abt.pnlLogo = CreatePanel(w-ScaledSize(64-6),0,ScaledSize(64),ScaledSize(64),win)
 		SetGadgetLayout abt.pnlLogo, EDGE_CENTERED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
-		
+
 		'abt.pnlLogo = CreatePanel(0,0,64,64,win)
 		'SetGadgetLayout abt.pnlLogo, EDGE_ALIGNED, EDGE_CENTERED, EDGE_ALIGNED, EDGE_CENTERED
-		
+
 		If Not pixLogo Then pixLogo = LoadPixmapPNG("incbin::bmxlogo.png")
 		SetGadgetPixmap abt.pnlLogo, pixLogo, PANELPIXMAP_CENTER
-		
+
 		Local y = 12
 		Local arch:String
 ?x86
@@ -759,21 +748,21 @@ Type TAboutRequester Extends TRequester
 		SetGadgetFont abt.lblTitle, LookupGuiFont( GUIFONT_SYSTEM, 12, FONT_BOLD )
 		SetGadgetLayout abt.lblTitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		y:+21
-		
+
 		abt.lblSubtitle = CreateLabel("Copyright Blitz Research Ltd.",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblSubtitle, LookupGuiFont( GUIFONT_SYSTEM, 10, FONT_ITALIC )
 		SetGadgetLayout abt.lblSubtitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
-		
+
 		y = 64
-		
+
 		SetGadgetLayout( CreateLabel("",ScaledSize(6),ScaledSize(y),w,ScaledSize(4),win,LABEL_SEPARATOR), EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
-		
+
 		y:+(4+6)
-		
+
 		Local tmpGadget:TGadget
-		
+
 		For y = y Until (277-21) Step 22
-			
+
 			tmpGadget = CreateLabel("",ScaledSize(6),ScaledSize(y),ScaledSize(135),ScaledSize(22),win,LABEL_LEFT)
 			SetGadgetLayout( tmpGadget, EDGE_ALIGNED, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_CENTERED )
 			abt.lblLeftAligned:+[tmpGadget]
@@ -782,16 +771,16 @@ Type TAboutRequester Extends TRequester
 			SetGadgetLayout( tmpGadget, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
 			DelocalizeGadget tmpGadget
 			abt.lblRightAligned:+[tmpGadget]
-			
+
 		Next
-		
+
 		abt.hypBlitz = CreateHyperlink("http://www.blitzbasic.com/",ScaledSize(6),(h-ScaledSize(28)),ScaledSize(200),ScaledSize(26),win,LABEL_LEFT)
 		SetGadgetLayout abt.hypBlitz, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED, EDGE_ALIGNED
-		
+
 		Return abt
-		
+
 	EndFunction
-	
+
 	Function Spacer( height:Int, inpout:Int Var )
 		inpout:+height+ScaledSize(6)
 		Return height
@@ -813,7 +802,7 @@ Type TCmdLineRequester Extends TRequester
 				If EventID()=EVENT_GADGETACTION
 					host.SetCommandLine TextFieldText(textfield)
 					Hide
-				EndIf			
+				EndIf
 			Case cancel
 				If EventID()=EVENT_GADGETACTION
 					SetGadgetText textfield,host.GetCommandLine()
@@ -824,7 +813,7 @@ Type TCmdLineRequester Extends TRequester
 		End Select
 		Return 1
 	End Method
-	
+
 	Method Show()
 		SetGadgetText textfield,host.GetCommandLine()
 		Super.Show()
@@ -880,7 +869,7 @@ Type TGotoRequester Extends TRequester
 		SetGadgetFilter( seek.linenumber, IntegerFilter )
 		Return seek
 	End Function
-	
+
 	Function IntegerFilter:Int( event:TEvent, context:Object )
 		Select event.id
 			Case EVENT_KEYCHAR
@@ -891,7 +880,7 @@ Type TGotoRequester Extends TRequester
 				Return True
 		EndSelect
 	EndFunction
-	
+
 End Type
 
 Type TColor
@@ -923,8 +912,8 @@ Type TColor
 			green=RequestedGreen()
 			blue=RequestedBlue()
 			Return True
-		EndIf				
-	End Method	
+		EndIf
+	End Method
 End Type
 
 Type TTextStyle
@@ -932,7 +921,7 @@ Type TTextStyle
 	Field	label:TGadget,panel:TGadget,combo:TGadget
 	Field	underline:TGadget, color:TColor
 	Field	flags
-	
+
 	Method Set(rgb,bolditalic)
 		color.set(rgb)
 		flags=bolditalic
@@ -973,7 +962,7 @@ Type TTextStyle
 				Return True
 		End Select
 	End Method
-	
+
 	Method Refresh()
 		SetPanelColor panel,color.red,color.green,color.blue
 		SelectGadgetItem combo,flags&3
@@ -1002,7 +991,7 @@ Type TCaretStyle
 	Field	label:TGadget,panel:TGadget,combo:TGadget
 	Field	color:TColor
 	Field	width:Int = 1
-	
+
 	Method Set(rgb,width)
 		color.set(rgb)
 		Self.width=width
@@ -1037,7 +1026,7 @@ Type TCaretStyle
 			'	Return True
 		End Select
 	End Method
-	
+
 	Method Refresh()
 		SetPanelColor panel,color.red,color.green,color.blue
 		SelectGadgetItem combo,width - 1
@@ -1059,7 +1048,7 @@ Type TCaretStyle
 End Type
 
 Type TGadgetStyle
-	
+
 	Global fntLibrary:TGUIFont[] =	[TGuiFont(Null), LookupGuiFont(GUIFONT_SYSTEM), LookupGuiFont(GUIFONT_MONOSPACED), ..
 							LookupGuiFont(GUIFONT_SANSSERIF), LookupGuiFont(GUIFONT_SERIF), ..
 							LookupGuiFont(GUIFONT_SCRIPT) ]
@@ -1074,7 +1063,7 @@ Type TGadgetStyle
 		SetGadgetColor gadget,bg.red,bg.green,bg.blue,True
 		SetGadgetColor gadget,fg.red,fg.green,fg.blue,False
 	End Method
-	
+
 	Method Set(fg_rgb,bg_rgb,ftype,fname$="",fsize=0)
 		fg.set(fg_rgb)
 		bg.set(bg_rgb)
@@ -1091,7 +1080,7 @@ Type TGadgetStyle
 	Method ToString$()
 		Return font_name+","+String(font_size).Replace(",",".")+","+fg.ToString()+","+bg.ToString()+","+font_type
 	End Method
-	
+
 	Function GetArg$(a$ Var)
 		Local p = a.Find(",")
 		If p=-1 Then p=a.length
@@ -1099,8 +1088,8 @@ Type TGadgetStyle
 		a$=a$[p+1..]
 		Return r$
 	End Function
-	
-	Method FromString(s$)		
+
+	Method FromString(s$)
 		font_name=GetArg(s$)
 		font_size=Double(GetArg(s$))
 		fg.red=Int(GetArg(s$))
@@ -1142,10 +1131,10 @@ Type TGadgetStyle
 					font_name=FontName(f)
 					font_size=FontSize(f)
 					Return True
-				EndIf				
+				EndIf
 		End Select
 	End Method
-	
+
 	Method Refresh()
 		font=fntLibrary[font_type]
 		If Not font Then font=LoadGuiFont(font_name,font_size)
@@ -1212,19 +1201,19 @@ Type TOptionsRequester Extends TPanelRequester
 	Field addappstub:TGadget
 	Field delappstub:TGadget
 	Field caretStyle:TCaretStyle
-	
+
 	Method Show()
 		RefreshGadgets()
 		Super.Show()
 	EndMethod
-	
+
 	Method Snapshot()
 		If Not undo undo=CreateBank(8192)
 		Local stream:TStream=CreateBankStream(undo)
 		write stream
 		stream.close
 	End Method
-	
+
 	Method Restore()
 		If Not undo Return
 		Local stream:TStream=CreateBankStream(undo)
@@ -1255,7 +1244,7 @@ Type TOptionsRequester Extends TPanelRequester
 		navstyle.set(0,-1,GUIFONT_SYSTEM)
 		appstubs = ["brl.appstub"]
 		caretStyle.set($ffffff,1)
-		
+
 		RefreshGadgets
 	End Method
 
@@ -1309,10 +1298,10 @@ Type TOptionsRequester Extends TPanelRequester
 				Case "bracketmatching" bracketmatching=t
 				Case "autobackup" autobackup=t
 				Case "autoindent" autoindent=t
-				Case "tabsize" tabsize=t		
+				Case "tabsize" tabsize=t
 				Case "editfontname" editfontname=b
 				Case "editfontsize" editfontsize=t
-				Case "editcolor" editcolor.FromString(b)		
+				Case "editcolor" editcolor.FromString(b)
 				Case "normal_style" styles[NORMAL].FromString(b)
 				Case "comment_style" styles[COMMENT].FromString(b)
 				Case "quote_style" styles[QUOTED].FromString(b)
@@ -1340,14 +1329,14 @@ Type TOptionsRequester Extends TPanelRequester
 			If a.StartsWith("appstub_") Then
 				appstubs :+ [b]
 			End If
-		Wend		
+		Wend
 		RefreshGadgets
 	End Method
-	
+
 	Method RefreshGadgets()
 		Local	rgb:TColor,flags
 		editfont=LoadGuiFont(editfontname,editfontsize)
-		
+
 		'Language Loading / Enumeration
 		ClearGadgetItems languages
 		AddGadgetItem languages, "English (English) [Embedded]", GADGETITEM_DEFAULT,-1,"",DEFAULT_LANGUAGEPATH
@@ -1358,7 +1347,7 @@ Type TOptionsRequester Extends TPanelRequester
 				AddGadgetItem languages, tmpFile.Split(".")[0], flags, -1, "", "$BMXPATH/cfg/"+tmpFile
 			EndIf
 		Next
-		
+
 		SetButtonState buttons[0],showtoolbar
 		SetButtonState buttons[1],restoreopenfiles
 		SetButtonState buttons[2],autocapitalize
@@ -1393,7 +1382,7 @@ Type TOptionsRequester Extends TPanelRequester
 		outputstyle.Refresh
 		navstyle.Refresh
 		dirty=True
-		
+
 		ClearGadgetItems appstublist
 		For Local appstub:String = EachIn appstubs
 			AddGadgetItem appstublist,appstub
@@ -1520,8 +1509,8 @@ Type TOptionsRequester Extends TPanelRequester
 		If refresh Then RefreshGadgets()
 		Return processed
 	End Method
-	
-	Method InitOptionsRequester(host:TCodePlay)		
+
+	Method InitOptionsRequester(host:TCodePlay)
 		Local	w:TGadget
 		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(380), ScaledSize(460))
 ' init values
@@ -1531,15 +1520,15 @@ Type TOptionsRequester Extends TPanelRequester
 		editorpanel=AddPanel("{{options_editortab}}")
 		toolpanel=AddPanel("{{options_toolstab}}")
 		appstubpanel=AddPanel("{{options_appstubtab}}")
-		
+
 		SetGadgetShape( tabber, GadgetX(tabber), GadgetY(tabber)+ScaledSize(32), GadgetWidth(tabber), GadgetHeight(tabber)-ScaledSize(32) )
-		
+
 		w=window
 		CreateLabel("{{options_options_label_language}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(80),ScaledSize(24),w)
 		languages = CreateComboBox(ScaledSize(90),ScaledSize(6),ClientWidth(w)-ScaledSize(96),ScaledSize(26),w)
 
 		w=optionspanel
-		
+
 		buttons[0]=CreateButton("{{options_options_btn_showtoolbar}}",ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 		buttons[1]=CreateButton("{{options_options_btn_autorestore}}",ScaledSize(6),ScaledSize(34),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 		buttons[2]=CreateButton("{{options_options_btn_autocaps}}",ScaledSize(6),ScaledSize(60),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
@@ -1556,12 +1545,12 @@ Type TOptionsRequester Extends TPanelRequester
 		CreateLabel("{{options_editor_label_background}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(90),ScaledSize(24),w)
 		editpanel=CreatePanel(ScaledSize(100),ScaledSize(6),ScaledSize(24),ScaledSize(24),w,PANEL_BORDER|PANEL_ACTIVE)
 		editbutton=CreateButton("..",ScaledSize(128),ScaledSize(6),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
-		
+
 		tabbutton=CreateComboBox(ScaledSize(128),ScaledSize(36),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
 		For Local i=1 To 8
 			AddGadgetItem tabbutton,"{{options_editor_itemlabel_tabsize}} "+(i*2),GADGETITEM_LOCALIZED
 		Next
-		
+
 		styles=New TTextStyle[6]
 		styles[NORMAL]=TTextStyle.Create("{{options_editor_label_plaintext}}:",ScaledSize(6),ScaledSize(66),w)
 		styles[COMMENT]=TTextStyle.Create("{{options_editor_label_remarks}}:",ScaledSize(6),ScaledSize(96),w)
@@ -1569,12 +1558,12 @@ Type TOptionsRequester Extends TPanelRequester
 		styles[KEYWORD]=TTextStyle.Create("{{options_editor_label_keywords}}:",ScaledSize(6),ScaledSize(156),w)
 		styles[NUMBER]=TTextStyle.Create("{{options_editor_label_numbers}}:",ScaledSize(6),ScaledSize(186),w)
 		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",ScaledSize(6),ScaledSize(216),w)
-		
+
 		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",ScaledSize(6),ScaledSize(250),w)
-		
+
 		textarea=CreateTextArea(ScaledSize(6),ScaledSize(280),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(256),w,TEXTAREA_READONLY)
 		SetGadgetText textarea,"'Sample Code~n~nresult = ((2.0 * 4) + 1)~nPrint( ~qResult: ~q + result )~n"
-		
+
 		w=toolpanel
 		outputstyle=TGadgetStyle.Create("{{options_tools_label_output}}: ",ScaledSize(6),ScaledSize(6),w)
 		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(66),w)
@@ -1592,22 +1581,22 @@ Type TOptionsRequester Extends TPanelRequester
 
 		SetDefaults()
 		SetPanel optionspanel
-		
+
 		SnapShot
 	End Method
-	
+
 	Function Create:TOptionsRequester(host:TCodePlay)
 		Local	o:TOptionsRequester
 		o=New TOptionsRequester
 		o.InitOptionsRequester host
 		Return o
 	End Function
-	
+
 End Type
 
 Type TFindRequester Extends TRequester
 	Field	findterm:TGadget
-	
+
 	Method ShowFind(term$="")
 		If term SetGadgetText(findterm,term)
 		Super.Show()
@@ -1615,7 +1604,7 @@ Type TFindRequester Extends TRequester
 	End Method
 
 	Method Poll()
-		Local	find$,data		
+		Local	find$,data
 		Select EventSource()
 			Case window
 				If EventID()=EVENT_WINDOWCLOSE
@@ -1653,7 +1642,7 @@ End Type
 Type TReplaceRequester Extends TRequester
 	Field	findterm:TGadget,replaceterm:TGadget
 	Field	findnext:TGadget,replaceit:TGadget,replaceall:TGadget
-	
+
 	Method Show()
 		Super.Show()
 		ActivateGadget findterm
@@ -1702,12 +1691,12 @@ Type TReplaceRequester Extends TRequester
 		Local	seek:TReplaceRequester
 		seek=New TReplaceRequester
 		seek.initrequester(host,"{{replace_window_title}}",ScaledSize(380),ScaledSize(80),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,"{{replace_btn_findnext}}")
-		
+
 		y=11
 		CreateLabel( "{{replace_label_find}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
 		seek.findterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
-		y:+32		
+		y:+32
 		CreateLabel( "{{replace_label_replacewith}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
 		seek.replaceterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
@@ -1715,7 +1704,7 @@ Type TReplaceRequester Extends TRequester
 		y=8
 		seek.replaceit=CreateButton("{{replace_btn_replace}}",x,ScaledSize(y),ScaledSize(96),ScaledSize(26),seek.window)
 		seek.replaceall=CreateButton("{{replace_btn_replaceall}}",x,ScaledSize(y+32),ScaledSize(96),ScaledSize(26),seek.window)
-		
+
 		Return seek
 	End Function
 End Type
@@ -1729,7 +1718,7 @@ Type TToolPanel Extends TEventHandler
 	Field	panel:TGadget
 	Field	index
 	Field	active
-	
+
 	Method Show()
 	End Method
 End Type
@@ -1748,7 +1737,7 @@ Type TNode Extends TTool
 	Field	parent:TNode
 	Field	kids:TList=New TList
 	Field	views:TView[]
-' activate program	
+' activate program
 	Field	target:TTool
 	Field	action
 	Field	argument:Object
@@ -1791,18 +1780,18 @@ Type TNode Extends TTool
 			If r Return r
 		Next
 	End Method
-	
+
 	?Debug
 	Method Dump(indent$="")
-		Local	n:TNode		
+		Local	n:TNode
 		Print indent+name
 		indent:+"~t"
 		For n=EachIn kids
 			n.Dump indent
 		Next
-	End Method		
+	End Method
 	?
-	
+
 	Method IsHidden()
 		Local	v:TView
 		If Not parent Return False
@@ -1811,7 +1800,7 @@ Type TNode Extends TTool
 		Next
 		Return True
 	End Method
-	
+
 	Method SetAction(tool:TTool,cmd,arg:Object=Null)
 		target=tool
 		action=cmd
@@ -1830,31 +1819,31 @@ Type TNode Extends TTool
 			Next
 		EndIf
 	End Method
-	
+
 	Method Detach()
 		Hide()
 		If parent parent.kids.remove Self;parent=Null
 	End Method
-	
+
 	Method FreeKids()
 		For Local n:TNode = EachIn kids
 			n.free
 		Next
 	End Method
-	
+
 	Method Free()
 		FreeKids()
 		Detach()
 		target=Null;argument=Null;views=Null
 	End Method
-	
+
 	Method Invoke(command,arg:Object=Null)
 		Select command
 		Case TOOLACTIVATE
 			If target Return target.Invoke(action,argument)
 		End Select
 	End Method
-	
+
 	Method Find:TNode(treeviewnode:TGadget,view=0)
 		Local	n:TNode,r:TNode
 		Local	v:TView
@@ -1865,13 +1854,13 @@ Type TNode Extends TTool
 			If r Return r
 		Next
 	End Method
-	
+
 	Method SetNode(treeviewnode:TGadget,view=0)
 		Local	v:TView = getview(view)
 		v.node=treeviewnode
 		open view
 	End Method
-	
+
 	Method HighLight(view=-1)
 		Local	v:TView
 		If view=-1
@@ -1883,7 +1872,7 @@ Type TNode Extends TTool
 		v=GetView(view)
 		If v.node SelectTreeViewNode v.node
 	End Method
-	
+
 	Method Open(view=-1)
 		Local	v:TView
 		If view=-1
@@ -1899,7 +1888,7 @@ Type TNode Extends TTool
 '			If v.node ExpandTreeViewNode v.node
 		EndIf
 	End Method
-	
+
 	Method Close(view=0)
 		Local	v:TView = GetView(view)
 		If v.state<>CLOSEDSTATE
@@ -1907,7 +1896,7 @@ Type TNode Extends TTool
 '			If v.node CollapseTreeViewNode v.node
 		EndIf
 	End Method
-	
+
 	Method GetState(view=0)
 		Return GetView(view).state
 	End Method
@@ -1919,10 +1908,10 @@ Type TNode Extends TTool
 		If Not views[view] views[view] = New TView
 		Return views[view]
 	End Method
-	
+
 	Method GetIndex()
 		Local	node:TNode
-		Local	i		
+		Local	i
 		If parent
 			For node=EachIn parent.kids
 				If node=Self Return i
@@ -1930,18 +1919,18 @@ Type TNode Extends TTool
 			Next
 		EndIf
 	End Method
-	
+
 	Method Refresh()
 		For Local i:Int = 0 Until views.length
 			RefreshView i
 		Next
 	End Method
-	
+
 	Method RefreshView(view=0)
 		Local	n:TNode,quick,nodeToOpen:TGadget
 		Local	v:TView,vv:TView
 		Local	node
-		If parent And parent.getstate(view)=CLOSEDSTATE quick=True		
+		If parent And parent.getstate(view)=CLOSEDSTATE quick=True
 		v=getview(view)
 		If v.node And parent
 			If GadgetText(v.node) <> name Then
@@ -1954,7 +1943,7 @@ Type TNode Extends TTool
 				vv=parent.getview(view)
 				If vv.node
 					v.node=InsertTreeViewNode(GetIndex(),name,vv.node)
-					If v.state=HIDESTATE v.state=CLOSEDSTATE					
+					If v.state=HIDESTATE v.state=CLOSEDSTATE
 					If vv.state=OPENSTATE nodeToOpen = vv.node
 					quick=False
 				EndIf
@@ -1972,7 +1961,7 @@ Type TNode Extends TTool
 		Local	link:TLink
 		If node	link=kids.FindLink(node)
 		If link link=link.NextLink()
-		If link Return TNode(link.Value())	
+		If link Return TNode(link.Value())
 	End Method
 
 	Method Sync(snap:TNode)
@@ -1991,11 +1980,11 @@ Type TNode Extends TTool
 				If kid.name=snapkid.name Exit
 				kid=NodeAfter(kid)
 			Wend
-' then remove entries in front			
+' then remove entries in front
 			If kid
 				While currentkid<>kid
 					t=currentkid
-					currentkid=NodeAfter(currentkid)			
+					currentkid=NodeAfter(currentkid)
 					t.free()
 				Wend
 			EndIf
@@ -2017,7 +2006,7 @@ Type TNode Extends TTool
 ' remove any entries at end
 		While currentkid
 			t=currentkid
-			currentkid=NodeAfter(currentkid)			
+			currentkid=NodeAfter(currentkid)
 			t.free()
 		Wend
 		Refresh()
@@ -2026,7 +2015,7 @@ Type TNode Extends TTool
 	Method SetName(n$)
 		name=n
 	End Method
-		
+
 	Method AddNode:TNode(name$)
 		Local	v:TNode
 		v=New TNode
@@ -2034,19 +2023,19 @@ Type TNode Extends TTool
 		Append v
 		Return v
 	End Method
-	
+
 	Method Append(v:TNode)
 		v.parent=Self
 		kids.AddLast v
-	End Method	
-	
+	End Method
+
 	Function CreateNode:TNode(name$)
 		Local	node:TNode
 		node=New TNode
 		node.setname name
 		Return node
 	End Function
-	
+
 End Type
 
 Type THelpPanel Extends TToolPanel
@@ -2074,7 +2063,7 @@ Type THelpPanel Extends TToolPanel
 		node=AddLink( node,StripDir( path ),t )
 
 		Local map:TMap=New TMap
-		
+
 		'scan for html files
 		For Local e$=EachIn LoadDir( path )
 			If e="index.html" Continue
@@ -2126,7 +2115,7 @@ Type THelpPanel Extends TToolPanel
 		Next
 
 		link=AddLink( host.helproot,"{{navnode_moduleindex}}","" )
-		
+
 		If FileType( host.bmxpath+"/docs/html/Modules/commands.txt" )=FILETYPE_FILE
 			Local comm$=CacheAndLoadText( host.bmxpath+"/docs/html/Modules/commands.txt" )
 			For Local line$=EachIn comm.Split( "~n" )
@@ -2137,7 +2126,7 @@ Type THelpPanel Extends TToolPanel
 				AddLink link,bits[0],host.bmxpath+bits[1]
 			Next
 		EndIf
-			
+
 		host.helproot.Refresh
 	End Method
 
@@ -2152,7 +2141,7 @@ Type THelpPanel Extends TToolPanel
 			Case TOOLPASTE
 				GadgetPaste htmlview
 			Case TOOLSHOW
-				ActivateGadget htmlview	
+				ActivateGadget htmlview
 				host.SetTitle
 			Case TOOLNAVIGATE
 				href$=String(argument)
@@ -2193,10 +2182,10 @@ Type THelpPanel Extends TToolPanel
 							EndIf
 						EndIf
 					EndIf
-			End Select			
+			End Select
 		EndIf
 	End Method
-	
+
 	Method Go(url$,internal=False)
 		Local	node:TNode
 
@@ -2215,14 +2204,14 @@ Type THelpPanel Extends TToolPanel
 			node.Highlight
 '		Else
 '			print "node not found"
-		EndIf		
-		ActivateGadget htmlview			
+		EndIf
+		ActivateGadget htmlview
 	End Method
-	
+
 	Method Home()
 		Go host.bmxpath+HOMEPAGE,True
 	End Method
-	
+
 	Method Forward()
 		HtmlViewForward htmlview
 	End Method
@@ -2238,7 +2227,7 @@ Type THelpPanel Extends TToolPanel
 		p.name="{{tab_help}}"
 		codeplay.addpanel(p)
 		style=HTMLVIEW_NONAVIGATE		'HTMLVIEW_NOCONTEXTMENU
-		p.htmlview=CreateHTMLView(0,0,ClientWidth(p.panel),ClientHeight(p.panel),p.panel,style)		
+		p.htmlview=CreateHTMLView(0,0,ClientWidth(p.panel),ClientHeight(p.panel),p.panel,style)
 		SetGadgetLayout p.htmlview,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 '		p.Home
 		p.SyncDocs
@@ -2248,15 +2237,15 @@ Type THelpPanel Extends TToolPanel
 End Type
 
 Type TSearchResult
-	
+
 	Field filepath$
 	Field char%, line%
 	Field linestring$
-	
+
 	Method AddToListbox( pGadget:TGadget )
 		AddGadgetItem pGadget, "[" + line + ", " + char + "] " + filepath, 0, -1, StripWhitespace(linestring,char), Self
 	EndMethod
-	
+
 	Method Set:TSearchResult(pFilePath$,pChar%,pLine%,pLineString$)
 		filepath = pFilePath
 		char = pChar
@@ -2264,7 +2253,7 @@ Type TSearchResult
 		linestring = pLineString
 		Return Self
 	EndMethod
-	
+
 	Function StripWhitespace$(pString$,pChar%)
 		If pString.length < pChar Then Return pString
 		Local outString$
@@ -2278,20 +2267,20 @@ Type TSearchResult
 		Next
 		Return outString
 	EndFunction
-	
+
 EndType
 
 Type TSearchRequester Extends TRequester
-	
+
 	Const strSearchText$ = "{{search_btn_startsearch}}", strStopSearchText$ = "{{search_btn_stopsearch}}"
-	
+
 	Global strFileExts$[][] = [["bmx"],filetypes.Split(","),String[](Null)]
-	
+
 	Field	findbox:TGadget,typebox:TGadget,pathbox:TGadget,pathbutton:TGadget,pathsubdir:TGadget,results:TGadget
 	Field lstSearchResults:TList = New TList
-	
+
 	Field safetyCount% = -1, safetyThreshold = 500, safetyResetCount% = 0
-	
+
 	Method Poll()
 		Local id:Int = EventID()
 		Local data:Int = EventData()
@@ -2324,22 +2313,22 @@ Type TSearchRequester Extends TRequester
 				If EventID()=EVENT_GADGETACTION Then Hide()
 		End Select
 	End Method
-	
+
 	Method Hide()
 		safetyCount = -2
 		Super.Hide()
 	EndMethod
-	
+
 	Method ShowWithPath( pPath$ )
 		If pPath Then SetGadgetText( pathbox, pPath )
 		Show()
 		ActivateGadget( findbox )
 	EndMethod
-	
+
 	Method StartSearch()
-		
+
 		PollSystem()
-		
+
 		Select FileType(RealPath(GadgetText(pathbox)))
 			Case FILETYPE_NONE
 				Notify LocalizeString("{{search_error_pathnotfound}}"),True
@@ -2350,36 +2339,36 @@ Type TSearchRequester Extends TRequester
 				ActivateGadget(pathbox)
 				Return
 		EndSelect
-		
+
 		If Not GadgetText(findbox) Then
 			Notify LocalizeString("{{search_error_nosearchstring}}"),True
 			ActivateGadget(findbox);Return
 		EndIf
-		
+
 		safetyResetCount = 0;safetyCount = 0
 		LocalizeGadget ok, strStopSearchText;ClearGadgetItems results
 		SearchPath( GadgetText(pathbox), strFileExts[SelectedGadgetItem(typebox)], GadgetText(findbox).ToLower(), ButtonState(pathsubdir) )
 		LocalizeGadget ok, strSearchText;safetyCount = -1
 		SetStatusText window, LocalizeString("{{search_msg_complete}}").Replace("%1",CountGadgetItems(results))
-		
+
 	EndMethod
-	
+
 	Method SearchPath(pPath$,pFileType$[],pString$,pRecurse% = True)
-		
+
 		pPath$ = RealPath(pPath)						'Make sure we are using a real path
-		
+
 		Local tmpSearchDir$[] = LoadDir(pPath,True)			'Load directors contents into string array
 		If Not tmpSearchDir Then Return					'Return if the directory is invalid
 		tmpSearchDir.Sort()							'Sort the contents alphabetically
-		
+
 		SetStatusText window, LocalizeString("{{search_msg_searchingdir}}").Replace("%1", pPath)			'And let user know which directory is being searched
-		
+
 		Local tmpFullPath$
-		
+
 		For Local tmpItem$ = EachIn tmpSearchDir
-			
+
 			tmpFullPath = pPath + "/" + tmpItem
-			
+
 			Select FileType(tmpFullPath)
 				Case FILETYPE_NONE;Continue                              'Skip item if, for whatever reason, it doesn't exist
 				Case FILETYPE_FILE                                       'If file, then check extension and search if valid
@@ -2394,19 +2383,19 @@ Type TSearchRequester Extends TRequester
 				Case FILETYPE_DIR                                        'If folder, then we might have to search recursively
 					If pRecurse Then SearchPath(tmpFullPath,pFileType,pString,pRecurse)
 			EndSelect
-			
+
 			If Not ShouldContinue() Then Return
-			
+
 		Next
-		
+
 		PollSystem();If PeekEvent() Then host.Poll()			'Let the system update as we could be searching a while
-		
+
 	EndMethod
-	
+
 	Method SearchFile(pPath$,pString$)
 		Local tmpText$ = CacheAndLoadText( pPath ), tmpLines$[], tmpFindPos%, tmpCharCount%, tmpLineNo%
 		Local tmpStringLength% = pString.length, tmpChunkLines$[], tmpPrevLines$
-		
+
 		If tmpText Then
 			tmpLines = tmpText.Split("~n")
 			tmpText = tmpText.ToLower()
@@ -2423,7 +2412,7 @@ Type TSearchRequester Extends TRequester
 			Wend
 		EndIf
 	EndMethod
-	
+
 	Method ShouldContinue()
 		If safetyCount < 0 Then Return False
 		If safetyCount >= safetyThreshold Then
@@ -2437,33 +2426,33 @@ Type TSearchRequester Extends TRequester
 		EndIf
 		Return True
 	EndMethod
-	
+
 	Function Create:TSearchRequester(host:TCodePlay)
 		Local	search:TSearchRequester = New TSearchRequester
 		search.initrequester(host,"{{search_window_title}}",ScaledSize(440),ScaledSize(280),STYLE_CANCEL|STYLE_DIVIDER|STYLE_OK|STYLE_STATUS|STYLE_RESIZABLE,strSearchText)
 		DisableGadget(search.ok)
-		
+
 		SetGadgetLayout(CreateLabel("{{search_label_find}}:",ScaledSize(6),ScaledSize(8+4),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
 		search.findbox=CreateTextField(ScaledSize(103),ScaledSize(8),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(21),search.window);SetGadgetLayout(search.findbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
-		
-		
+
+
 		SetGadgetLayout(CreateLabel("{{search_label_filetypes}}:",ScaledSize(6),ScaledSize(42),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
 		search.typebox=CreateComboBox(ScaledSize(103),ScaledSize(38),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(24),search.window);SetGadgetLayout(search.typebox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
-		
+
 		AddGadgetItem( search.typebox, "{{search_type_bmaxfiles}}",GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED,-1,"*.bmx" )
 		AddGadgetItem( search.typebox, "{{search_type_codefiles}}",GADGETITEM_LOCALIZED,-1,fileTypes )
 		AddGadgetItem( search.typebox, "{{search_type_allfiles}}",GADGETITEM_LOCALIZED,-1,"*")
-		
+
 		SetGadgetLayout(CreateLabel("{{search_label_searchpath}}:",ScaledSize(6),ScaledSize(72),ScaledSize(95),ScaledSize(48),search.window),1,0,1,0)
 		search.pathbox=CreateTextField(ScaledSize(103),ScaledSize(68),ClientWidth(search.window)-ScaledSize(103+6+30+6),ScaledSize(21),search.window);SetGadgetLayout(search.pathbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		search.pathbutton=CreateButton("..",ClientWidth(search.window)-ScaledSize(34+6),ScaledSize(65),ScaledSize(34),ScaledSize(26),search.window);SetGadgetLayout(search.pathbutton,EDGE_CENTERED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetGadgetText(search.pathbox, CurrentDir())
-		
+
 		search.pathsubdir=CreateButton("{{search_btn_searchsubfolders}}",ScaledSize(103),ScaledSize(98),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(20),search.window,BUTTON_CHECKBOX);SetGadgetLayout(search.pathsubdir,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetButtonState(search.pathsubdir,True)
-		
+
 		search.results=CreateListBox(ScaledSize(6),ScaledSize(128),ClientWidth(search.window)-ScaledSize(12),ScaledSize(280-(128+6)),search.window);SetGadgetLayout(search.results,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
-		
+
 		Return search
 	End Function
 End Type
@@ -2485,7 +2474,7 @@ Type TProjectRequester Extends TRequester
 			Refresh
 		End Select
 	End Method
-	
+
 	Method SetCurrent(i)
 		If i=-1
 			DisableGadget remove
@@ -2558,20 +2547,20 @@ Type TProjectRequester Extends TRequester
 		Next
 		SetCurrent -1
 	End Method
-	
+
 	Method Open(projnode:TProjects)
 		projects=projnode
 		Refresh
 		Show
 	End Method
-	
+
 	Function Create:TProjectRequester(host:TCodePlay)
 		Local x,y
 		Local	proj:TProjectRequester = New TProjectRequester
-	
+
 		proj.initrequester(host,"{{projman_window_title}}",ScaledSize(400),ScaledSize(168),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 		proj.listbox=CreateListBox( ScaledSize(6),ScaledSize(8),ScaledSize(244),ScaledSize(154),proj.window )
-		
+
 		x=ClientWidth(proj.window)-ScaledSize(144)
 		proj.add=CreateButton("{{projman_btn_addproj}}",x,ScaledSize(8),ScaledSize(138),ScaledSize(26),proj.window)
 		proj.remove=CreateButton("{{projman_btn_delproj}}",x,ScaledSize(40),ScaledSize(138),ScaledSize(26),proj.window)
@@ -2610,7 +2599,7 @@ Type TProjectProperties Extends TRequester
 			Refresh
 		End Select
 	End Method
-	
+
 	Method Tidy()
 		newproj = False
 		If dirty
@@ -2618,7 +2607,7 @@ Type TProjectProperties Extends TRequester
 			dirty=False
 		EndIf
 	End Method
-	
+
 	Method Poll()
 		If (EventID() <> EVENT_GADGETACTION) And (EventID() <> EVENT_WINDOWCLOSE) Then Return
 		Select EventSource()
@@ -2635,7 +2624,7 @@ Type TProjectProperties Extends TRequester
 						SetGadgetText localname,StripDir(dir)
 					EndIf
 					dirty=True
-				EndIf				
+				EndIf
 			Case checkout
 				Tidy()
 				Hide()
@@ -2643,12 +2632,12 @@ Type TProjectProperties Extends TRequester
 Rem
 			Case commit
 				Tidy
-				Hide				
-				proj.CommitVersion		
+				Hide
+				proj.CommitVersion
 			Case update
 				Tidy
-				Hide				
-				proj.UpdateVersion		
+				Hide
+				proj.UpdateVersion
 EndRem
 			Case ok
 				Tidy()
@@ -2661,7 +2650,7 @@ EndRem
 				EndIf
 		End Select
 	End Method
-	
+
 	Method Hide()
 		If proj And newproj Then proj.Free()
 		EnableGadget host.window
@@ -2677,21 +2666,21 @@ EndRem
 		SetGadgetText user,proj.svnuser
 		SetGadgetText password,proj.svnpass
 	End Method
-	
+
 	Method Open(projnode:TProjectFolderNode, newproject:Int = False)
 		newproj=newproject
 		proj=projnode
 		Refresh()
 		Show()
 	End Method
-	
+
 	Function Create:TProjectProperties(host:TCodePlay)
 		Local	proj:TProjectProperties = New TProjectProperties
 		proj.initrequester(host,"{{project_window_title}}",ScaledSize(480),ScaledSize(250),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 		proj.modal = True
-		
+
 		Local projectdetails:TGadget = CreatePanel(ScaledSize(6),ScaledSize(8),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(85),proj.window,PANEL_GROUP,"{{project_group_details}}")
-		
+
 		Local i,n,y
 		y=4
 
@@ -2715,7 +2704,7 @@ EndRem
 		proj.user=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
 		y:+30
 		CreateLabel("{{project_label_password}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.password=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox,TEXTFIELD_PASSWORD)		
+		proj.password=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox,TEXTFIELD_PASSWORD)
 		y:+30
 		proj.checkout=CreateButton("{{project_btn_checkout}}",ClientWidth(svnbox)-ScaledSize(154),ClientHeight(svnbox)-ScaledSize(32),ScaledSize(150),ScaledSize(28),svnbox)
 '		proj.update=CreateButton("{{project_btn_update}}",180,y+10,150,28,svnbox)
@@ -2732,7 +2721,7 @@ Function GetInfo$(a$ Var)
 	If p=0 p=a.length+1
 	r$=a$[..p-1]
 	a$=a$[p..]
-	Return r$	
+	Return r$
 End Function
 
 Type TFolderNode Extends TNode
@@ -2741,7 +2730,7 @@ Type TFolderNode Extends TNode
 	Field	scanned
 	Field	version
 	Field	foldertype
-	
+
 	Const PROJECTFOLDER=0
 	Const DIRECTORYFOLDER=1
 	Const FILEFOLDER=2
@@ -2754,18 +2743,18 @@ Type TFolderNode Extends TNode
 			If result Return result
 		Next
 	End Method
-	
+
 	Method SetName(n$)
 		If version Then n:+"("+version+")"
 		Super.SetName( n )
 		Refresh
 	End Method
-		
+
 	Method SetVersion(ver)
 		version=ver
 		SetName StripDir(path)
 	End Method
-	
+
 	Method Write(stream:TStream)
 		Local isopen
 		If GetState()=OPENSTATE isopen=True
@@ -2794,13 +2783,13 @@ Type TFolderNode Extends TNode
 	End Method
 
 	Method RunSVN(cmd$,about$,refresh)
-	
+
 		Local host:TCodePlay = ProjectHost()
 		If Not host Notify LocalizeString("{{svn_notification_nodehostnotfound}}");Return
-		
+
 		Local project:TProjectFolderNode = ProjectNode()
 		If Not project Notify LocalizeString("{{svn_notification_nodeprojectnotfound}}");Return
-		
+
 		If project.svnuser
 			cmd:+" --username "+project.svnuser
 			If project.svnpass cmd:+" --password "+project.svnpass
@@ -2812,20 +2801,20 @@ Type TFolderNode Extends TNode
 			host.execute cmd,about,0,0,Self
 		EndIf
 	End Method
-	
+
 	Method UpdateVersion()
 		Local cmd$=svncmd+" update"
 		cmd:+" "+quote(path)
 		RunSVN cmd,LocalizeString("{{svn_msg_updating}}").Replace("%1",path),True
 	End Method
-	
+
 	Method CommitVersion()
 		Local cmd$=svncmd+" commit"
 		cmd:+" -m ~qmy comment~q"
 		cmd:+" "+quote(path)
 		RunSVN cmd,LocalizeString("{{svn_msg_committing}}").Replace("%1",path),False
 	End Method
-	
+
 	Method Open(view=-1)
 		Update(True)
 		Super.Open view
@@ -2833,7 +2822,7 @@ Type TFolderNode Extends TNode
 
 	Method AddFileNode:TNode(file$)
 		Local	n:TNode
-		Local ext$	
+		Local ext$
 		If (","+FileTypes+",").Contains(","+ExtractExt(file).toLower()+",") Then
 			n=AddNode(StripDir(file))
 			n.SetAction(owner,TOOLOPEN,file)
@@ -2854,9 +2843,9 @@ Type TFolderNode Extends TNode
 	Method Scan(o:TNode)
 		Local p$
 		Local flist:TList = New TList
-		
+
 		owner=o
-		
+
 		For Local f$ = EachIn LoadDir(path,True)
 			If f[..1] = "." Then Continue
 			p$=path+"/"+f
@@ -2865,26 +2854,26 @@ Type TFolderNode Extends TNode
 					AddFileNode p$
 				Case FILETYPE_DIR
 					AddFolderNode p$
-			End Select	
+			End Select
 		Next
-		
+
 		SortKids
 		scanned = True
-		
+
 	End Method
-	
+
 	Method ScanKids()
 		For Local f:TFolderNode = EachIn kids
 			f.owner = owner
 			f.Update(False)
 		Next
 	End Method
-	
+
 	Method Rescan()
 		scanned = False
 		Update()
 	EndMethod
-	
+
 	Method Update( alwaysScanKids:Int = False )
 		If Not scanned Then
 			FreeKids()
@@ -2893,15 +2882,15 @@ Type TFolderNode Extends TNode
 		If alwaysScanKids Or Not IsHidden() Then ScanKids()
 		Refresh()
 	End Method
-	
+
 	Method Invoke(command,argument:Object=Null)
 		Local host:TCodePlay
 		Local cmd,p
 		Local line$
-	
+
 		host=ProjectHost()
 		If Not host Notify LocalizeString("{{svn_notification_nodehostnotfound}}");Return
-		
+
 		Select command
 		Case TOOLOUTPUT
 			line$=String(argument)
@@ -2920,7 +2909,7 @@ Type TFolderNode Extends TNode
 			cmd=Int(String(argument))
 			Select cmd
 			Case 0		'special toolmenu-command=0 fired by rightbutton node context
-				Highlight			
+				Highlight
 				Local menu:TGadget
 				menu=host.projects.projmenu
 				PopupWindowMenu host.window,menu,Self
@@ -2962,7 +2951,7 @@ Type TFolderNode Extends TNode
 End Type
 
 Type TProjectFolderNode Extends TFolderNode
-	
+
 	Field owner:TProjects
 	Field svnpath$,svnuser$,svnpass$,svnversion
 	Field svnerr$
@@ -2998,7 +2987,7 @@ Type TProjectFolderNode Extends TFolderNode
 			folder.Write(stream)
 		Next
 	End Method
-	
+
 	Method FromString(info$)
 		Local n$ = GetInfo(info)
 		If Not n Then n = "Unknown"
@@ -3013,7 +3002,7 @@ Type TProjectFolderNode Extends TFolderNode
 		isopen=Int(GetInfo(info))
 		If isopen
 			Open
-		EndIf	
+		EndIf
 		vers=Int(GetInfo(info))
 		If vers
 			SetVersion vers
@@ -3064,8 +3053,8 @@ Type TProjects Extends TNode
 		node=TNode(kids.ValueAtIndex(index))
 		If node node.Free
 		Refresh
-	End Method			
-	
+	End Method
+
 	Method MoveProject(index,dir)
 		Local node:TNode
 		Local link:TLink
@@ -3086,15 +3075,15 @@ Type TProjects Extends TNode
 				If link link=link._pred
 				If link
 					kids.Remove node
-					kids.InsertBeforeLink node,link			
+					kids.InsertBeforeLink node,link
 					index:-1
 				EndIf
-			EndIf		
+			EndIf
 			Append addproj
 			Refresh
 		EndIf
 		Return index
-	End Method			
+	End Method
 
 	Method NewProject()
 		addproj.Detach
@@ -3128,14 +3117,14 @@ Type TProjects Extends TNode
 					folder.SetVersion pversion
 					folder.ReScan()
 					If popen Then folder.Open()
-				EndIf		
+				EndIf
 			EndIf
 		Next
 	End Method
 
 	Method Write(stream:TStream)
 		For Local project:TProjectFolderNode = EachIn kids
-			project.Write(stream)		
+			project.Write(stream)
 		Next
 	End Method
 
@@ -3147,11 +3136,11 @@ Type TProjects Extends TNode
 			host.OpenSource String(argument)
 		End Select
 	End Method
-			
+
 	Function CreateProjects:TProjects(host:TCodePlay)
 		Local p:TProjects = New TProjects
 		p.SetName("{{navnode_projects}}")
-		p.host=host		
+		p.host=host
 		p.addproj=p.AddNode("{{navnode_addproject}}")
 		p.addproj.SetAction p,TOOLNEW
 
@@ -3183,7 +3172,7 @@ Type TByteBuffer Extends TStream
 		If readpointer MemMove bytes,Varptr bytes[count],readpointer
 		Return count
 	End Method
-	
+
 	Method ReadLine$()
 		For Local i:Int = 0 Until readpointer
 			If bytes[i]=10 Or bytes[i] = 0 Then
@@ -3194,7 +3183,7 @@ Type TByteBuffer Extends TStream
 			EndIf
 		Next
 	EndMethod
-	
+
 	Method WriteFromPipe( pipe:TPipeStream )
 		Local	n,m,count = pipe.ReadAvail()
 		n=readpointer+count
@@ -3206,7 +3195,7 @@ Type TByteBuffer Extends TStream
 		readpointer=n
 		Return count
 	EndMethod
-	
+
 	Method Write( buf:Byte Ptr,count )
 		Local	n,m
 		n=readpointer+count
@@ -3217,8 +3206,8 @@ Type TByteBuffer Extends TStream
 		MemCopy Varptr bytes[readpointer],buf,count
 		readpointer=n
 		Return count
-	End Method	
-	
+	End Method
+
 	Method LineAvail()
 		For Local i:Int = 0 Until readpointer
 			If bytes[i]=10 Return True
@@ -3244,7 +3233,7 @@ Type TByteBuffer Extends TStream
 		If readpointer MemMove bytes,Varptr bytes[count],Size_T(readpointer)
 		Return count
 	End Method
-	
+
 	Method ReadLine$()
 		For Local i:Int = 0 Until readpointer
 			If bytes[i]=10 Or bytes[i] = 0 Then
@@ -3255,7 +3244,7 @@ Type TByteBuffer Extends TStream
 			EndIf
 		Next
 	EndMethod
-	
+
 	Method WriteFromPipe( pipe:TPipeStream )
 		Local	n,m,count = pipe.ReadAvail()
 		n=readpointer+count
@@ -3267,7 +3256,7 @@ Type TByteBuffer Extends TStream
 		readpointer=n
 		Return count
 	EndMethod
-	
+
 	Method Write:Long( buf:Byte Ptr,count:Long )
 		Local	n:Long,m:Long
 		n=readpointer+count
@@ -3278,8 +3267,8 @@ Type TByteBuffer Extends TStream
 		MemCopy Varptr bytes[readpointer],buf,Size_T(count)
 		readpointer=n
 		Return count
-	End Method	
-	
+	End Method
+
 	Method LineAvail()
 		For Local i:Int = 0 Until readpointer
 			If bytes[i]=10 Return True
@@ -3318,7 +3307,7 @@ Type TVar Extends TNode
 	Method SetVarName(n$)
 		Local	p
 		name=n
-' if object ref set addr$ field	
+' if object ref set addr$ field
 		If name.find("$=")=-1 And name.find( ":String=" )=-1 And name.find(")=$")=-1
 			p=name.find("=$")
 			If p<>-1
@@ -3327,8 +3316,8 @@ Type TVar Extends TNode
 						TDebugTree.RemoveObj TObj(obj)
 					Else
 						TObj(obj).refs:-1
-					EndIf	
-				EndIf				
+					EndIf
+				EndIf
 				obj=TDebugTree.AddObj(name[p+2..])
 				'Request object dump if we are visible now that
 				'we have updated our own object pointer.
@@ -3343,14 +3332,14 @@ Type TVar Extends TNode
 			EndIf
 		EndIf
 	End Method
-	
+
 	Method AddVar(name$)
 		Local	v:TVar=New TVar
 		v.owner=owner
 		Append v
 		v.setvarname name
 	End Method
-	
+
 	Method SetValue(val:TVar)
 		Local	v:TVar,w:TVar,i,kidsarray:Object[]
 ' if this is a reference to same object refresh values
@@ -3370,28 +3359,28 @@ Type TVar Extends TNode
 					EndIf
 					i:+1
 				Next
-				kidsarray = Null	
+				kidsarray = Null
 			EndIf
 			Refresh
-		EndIf	
+		EndIf
 ' recurse so all references are updated
 		If IsHidden() Then Return				'parent And parent.state=CLOSEDSTATE Return
 		For v=EachIn kids
 			v.SetValue val
 		Next
 	End Method
-	
+
 	Method Open(open=-1)
 		For Local kid:TVar = EachIn kids
 			kid.Request()
 		Next
 		Super.Open(open)
 	EndMethod
-	
+
 	Method Request()
 		If TObj(obj) Then TObj(obj).ShouldSync(owner)
 	EndMethod
-	
+
 End Type
 
 Type TScope Extends TVar
@@ -3404,7 +3393,7 @@ Type TScope Extends TVar
 				tree.SelectScope Self,True
 		End Select
 	End Method
-	
+
 	Method SetScope(s:TScope)
 		Local	v:TVar
 		file=s.file
@@ -3413,7 +3402,7 @@ Type TScope Extends TVar
 		s.obj=Self
 		SetValue s
 	End Method
-	
+
 	Method SetFile(debugtree:TDebugTree,f$)
 		tree=debugtree
 		Local p=f.Find("<")+1
@@ -3426,13 +3415,13 @@ Type TScope Extends TVar
 		EndIf
 		obj=Self
 	End Method
-	
+
 	Method Request()
 		For Local kid:TVar = EachIn kids
 			kid.Request()
 		Next
 	EndMethod
-	
+
 End Type
 
 Type TDebugTree Extends TVar
@@ -3446,7 +3435,7 @@ Type TDebugTree Extends TVar
 	Field	inexception$
 	Field	firststop
 	Field	cancontinue
-	
+
 	Method Reset()
 '		host.SetMode host.DEBUGMODE
 		SetStack( New TList )
@@ -3477,7 +3466,7 @@ Type TDebugTree Extends TVar
 	Function FindObj:TObj(addr$)
 		Return TObj(MapValueForKey( objmap, addr ))
 	End Function
-	
+
 	Function RemoveObj(obj:TObj)		':TObj
 		If obj Then
 			obj.refs:-1
@@ -3491,14 +3480,14 @@ Type TDebugTree Extends TVar
 			tmpVar.Request()
 		Next
 	End Method
-	
+
 	Method QueueSync( pObj:TObj )
 		If Not pObj Then Return
 		'Sync as soon as the debug pipe is clear
 		'(see TOuputPanel.SendDumpRequests()).
 		pObj.syncnext = True
 	EndMethod
-			
+
 	Method SetStack(list:TList)
 		Local	openscope:TScope
 		Local	s:TScope
@@ -3511,7 +3500,7 @@ Type TDebugTree Extends TVar
 				s=scope
 			Else
 				s=TScope(kids.ValueAtIndex(i))
-' simon was here				
+' simon was here
 				If s.name=scope.name
 					s.SetScope scope
 					scope.Free
@@ -3524,7 +3513,7 @@ Type TDebugTree Extends TVar
 					s=scope
 					count=i+1
 				EndIf
-				
+
 			EndIf
 			If firststop
 				If host.IsSourceOpen(s.file) openscope=s
@@ -3545,7 +3534,7 @@ Type TDebugTree Extends TVar
 	End Method
 
 	Method SelectScope(scope:TScope,open)
-		If Not scope Return		
+		If Not scope Return
 		host.SetMode host.DEBUGMODE	' simon was here, smoved from reset
 		If scope.file host.DebugSource scope.file,scope.line,scope.column
 		scope.Open()
@@ -3557,11 +3546,11 @@ Type TDebugTree Extends TVar
 
 	Method ProcessError$(line$)
 		Local	p
-		
+
 		While p < line.length
 			If line[p]=$3E Then p:+1 Else Exit		'">"
 		Wend
-		
+
 		If p = line.length Return
 		If p Then line = line[p..]
 
@@ -3582,10 +3571,10 @@ Type TDebugTree Extends TVar
 			EndIf
 			Return
 		EndIf
-		
-		If instack 			
+
+		If instack
 			If line="}"
-				
+
 				SetStack instack
 				instack=Null
 				inscope=Null
@@ -3597,7 +3586,7 @@ Type TDebugTree Extends TVar
 				EndIf
 				Return
 			EndIf
-			
+
 			If infile
 				If line="Local <local>"
 				Else
@@ -3640,8 +3629,8 @@ Type TDebugTree Extends TVar
 				host.RefreshToolbar()
 			EndIf
 			Return
-		EndIf					
-		
+		EndIf
+
 		If line.StartsWith("ObjectDump@")
 			p=line.find("{",11)
 			If p=-1 Return line
@@ -3651,7 +3640,7 @@ Type TDebugTree Extends TVar
 			invar.owner=Self
 			Return
 		EndIf
-		
+
 	End Method
 
 	Function CreateDebugTree:TDebugTree(host:TCodePlay)
@@ -3660,7 +3649,7 @@ Type TDebugTree Extends TVar
 		d.SetName "{{navtab_debug}}"
 		d.host=host
 		d.Open
-		Return d		
+		Return d
 	End Function
 End Type
 
@@ -3669,7 +3658,7 @@ Type TNodeView
 	Field	root:TNode
 	Field	treeview:TGadget
 	Field	index
-	
+
 	Method NewView()
 		Local	n:TNode,hnode:TGadget
 		hnode=SelectedTreeViewNode(treeview)
@@ -3683,9 +3672,9 @@ Type TNodeView
 
 		Select EventID()
 			Case EVENT_GADGETSELECT
-				n.invoke(TOOLSELECT)				
+				n.invoke(TOOLSELECT)
 			Case EVENT_GADGETACTION
-				n.invoke(TOOLACTIVATE)				
+				n.invoke(TOOLACTIVATE)
 			Case EVENT_GADGETMENU
 				n.invoke(TOOLMENU,Self)
 			Case EVENT_GADGETOPEN
@@ -3702,11 +3691,11 @@ Type TNavBar Extends TEventHandler
 	Field	viewlist:TList=New TList
 	Field	selected:TNodeView
 	Field	navmenu:TGadget
-	
+
 	Method SelectedView()
 		If selected Return selected.index
 	End Method
-		
+
 	Method SelectView(index)
 		Local	n:TNodeView
 		If index>=viewlist.count() Return
@@ -3719,7 +3708,7 @@ Type TNavBar Extends TEventHandler
 		ShowGadget n.treeview
 		SelectGadgetItem tabber,index
 	End Method
-	
+
 	Method AddView(node:TNode)
 		Local	n:TNodeView
 		Local	index,root:TGadget
@@ -3735,8 +3724,8 @@ Type TNavBar Extends TEventHandler
 		HideGadget n.treeview
 
 		n.index=viewlist.Count()
-		viewlist.AddLast n		
-		
+		viewlist.AddLast n
+
 		AddGadgetItem tabber,node.name,GADGETITEM_LOCALIZED
 		root=TreeViewRoot(n.treeview)
 		node.setnode root,n.index
@@ -3746,7 +3735,7 @@ Type TNavBar Extends TEventHandler
 
 	Method OnEvent()
 		If EventSource()=tabber
-			SelectView SelectedGadgetItem(tabber)				
+			SelectView SelectedGadgetItem(tabber)
 		End If
 		If selected And EventSource()=selected.treeview
 			selected.OnEvent
@@ -3760,7 +3749,7 @@ Type TNavBar Extends TEventHandler
 	End Method
 
 	Method Invoke(command,argument:Object=Null)
-		If command=TOOLREFRESH Refresh()		
+		If command=TOOLREFRESH Refresh()
 		If command=TOOLNEWVIEW And selected selected.NewView
 	End Method
 
@@ -3772,12 +3761,12 @@ Type TNavBar Extends TEventHandler
 
 	Function Create:TNavBar(host:TCodePlay, parent:TGadget)	',root:TNode)
 		Local	n:TNavBar = New TNavBar
-		n.host=host	
+		n.host=host
 		n.tabber=CreateTabber(0,0,ClientWidth(parent),ClientHeight(parent),parent)
 		SetGadgetLayout(n.tabber,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
 '		n.AddView root
 		n.navmenu=CreateNavMenu()
-		Return n		
+		Return n
 	End Function
 
 End Type
@@ -3786,7 +3775,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 
 	Field	host:TCodePlay
 	Field	output:TGadget
-	
+
 	Field	process:TProcess
 	Field	pipe:TStream
 
@@ -3796,13 +3785,13 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 	Field	errbuffer:TByteBuffer
 	Field	outputmenu:TGadget
 	Field	posttool:TTool
-	
+
 	Method ClearDumpRequests()
 		For Local o:TObj = EachIn MapValues(host.debugtree.objmap)
 			o.HasSynced(o.sync)
 		Next
 	EndMethod
-	
+
 	Method SendDumpRequests()
 		For Local o:TObj = EachIn MapValues(host.debugtree.objmap)
 			If o.syncnext Then
@@ -3811,12 +3800,12 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			EndIf
 		Next
 	EndMethod
-	
+
 	Method Clear()
 		If Not output Open()
 		SetGadgetText output,""
 	End Method
-	
+
 	Method WriteAscii(mess$)
 		If Not output Open()
 		AddTextAreaText output,mess.Replace("~0","")
@@ -3835,7 +3824,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		posttool=owner
 		host.SelectPanel Self
 		host.debugtree.Reset
-		
+
 		If process And ProcessStatus(process)
 			Delay 500
 			If ProcessStatus(process)
@@ -3846,7 +3835,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		cmd=cmd.Trim()
 		process=CreateProcess(cmd$,HIDECONSOLE)
 		If Not process Then Notify LocalizeString("{{output_notification_processfailure}}").Replace("%1",cmd);Return
-		If Not process.status() Then Notify LocalizeString("{{output_notification_failedstart}}").Replace("%1",cmd);process=Null;Return		
+		If Not process.status() Then Notify LocalizeString("{{output_notification_failedstart}}").Replace("%1",cmd);process=Null;Return
 		pipe=Process.pipe
 		wpipe=TTextStream.Create(pipe,TTextStream.UTF8)
 
@@ -3854,17 +3843,17 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		If home Clear
 		Write( mess+"~n" )
 		errbuffer = New TByteBuffer
-		host.RefreshToolbar	
+		host.RefreshToolbar
 
 	End Method
 
-	Method WritePipe(l$)	
+	Method WritePipe(l$)
 		Try
 			If pipe pipe.WriteLine(l)
 		Catch ex:TStreamWriteException
 			Write LocalizeString("{{output_msg_debugfailure}}~n").Replace("%1",l)
 			Stop
-		EndTry	
+		EndTry
 	End Method
 
 	Method Go()
@@ -3873,12 +3862,12 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		host.SelectPanel Self
 		host.RefreshToolbar()
 	End Method
-	
+
 	Method StepOver()
 		ClearDumpRequests()
 		WritePipe "s"
 	End Method
-	
+
 	Method StepIn()
 		ClearDumpRequests()
 		WritePipe "e"
@@ -3888,29 +3877,29 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		ClearDumpRequests()
 		WritePipe "l"
 	End Method
-	
+
 	Method Stop()
-		If Not process Return		
+		If Not process Return
 		process.Terminate()
-		FlushPipes process.pipe,process.err		
+		FlushPipes process.pipe,process.err
 		process.Close()
 		process=Null
 		Write LocalizeString("~n{{output_msg_processterminated}}~n")
 		host.DebugExit()
 		Close()
 	End Method
-	
+
 	Method Wait()
 		While process And process.status()
 			PollSystem
 		Wend
 	End Method
-	
+
 	Method Invoke(command,argument:Object=Null)
 		Select command
 			Case TOOLSHOW
 				host.SetTitle()
-				If output ActivateGadget output	
+				If output ActivateGadget output
 			Case TOOLCLOSE
 				host.RemovePanel Self
 				output=Null
@@ -3926,16 +3915,16 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 				host.options.outputstyle.apply output
 		End Select
 	End Method
-	
+
 	Method Close()
 		host.SelectPanel host.activepanel
 	End Method
-	
+
 	Method Escape()
 		Stop
 		Close
 	End Method
-	
+
 	Function outputfilter(event:TEvent,context:Object)
 		Local out:TOutputPanel=TOutputPanel(context)
 		If Not out Return
@@ -3951,7 +3940,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		End Select
 		Return 1
 	End Function
-	
+
 	Method OnEvent()
 		If EventSource()=output
 			If EventID()=EVENT_GADGETMENU
@@ -3959,10 +3948,10 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			EndIf
 		EndIf
 ' Case EVENT_TIMERTICK
-		If Not process Return		
-		
+		If Not process Return
+
 		ReadPipes process.pipe,process.err
-		
+
 		If Not process.status()
 			process.terminate
 			FlushPipes process.pipe,process.err
@@ -3979,17 +3968,17 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 					Local menuaction=Int(post)
 					If menuaction
 						host.OnMenu menuaction,posttool
-'					Else				
+'					Else
 '						Execute post$,"","",False,0
 					EndIf
 				Else
 					If host.options.hideoutput Close()
 				EndIf
 			EndIf
-		EndIf	
-		
+		EndIf
+
 	End Method
-		
+
 	Method FlushPipes(pipe:TPipeStream,errpipe:TPipeStream)
 		ReadPipes(pipe,errpipe)
 		Local bytes:Byte[] = errbuffer.flushbytes()
@@ -3999,7 +3988,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			If line<>">" Write line
 		EndIf
 	End Method
-		
+
 	Method ReadPipes(pipe:TPipeStream,errpipe:TPipeStream)
 		Local	status
 		Local	bytes:Byte[],line$
@@ -4010,13 +3999,13 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			line=line.Replace(Chr(13),"")
 			Write line
 		EndIf
-		
+
 		If errpipe.ReadAvail() Then
 			errbuffer.WriteFromPipe(errpipe)
 		Else
 			SendDumpRequests()
 		EndIf
-		
+
 '		If bytes Write String.FromBytes(bytes,bytes.length)
 		While errbuffer.LineAvail()
 			line$=errbuffer.ReadLine()
@@ -4026,13 +4015,13 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 				err:+line+"~n"
 			EndIf
 		Wend
-		
+
 	End Method
-	
+
 	Method WriteChar(char)
 		Local	pipe:TPipeStream
-				
-		If Not process Return		
+
+		If Not process Return
 		pipe=process.pipe
 		If char=3			'CTRL-C
 			Stop()
@@ -4052,18 +4041,18 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			user:+Chr(char)
 		EndIf
 	End Method
-		
+
 	Method Open()
 		If output Then
 			codeplay.SelectPanel Self
 			Return
 		EndIf
-		codeplay.addpanel(Self)		
+		codeplay.addpanel(Self)
 		output=CreateTextArea(0,0,ClientWidth(panel),ClientHeight(panel),panel,TEXTAREA_WORDWRAP)
 		DelocalizeGadget output
 		SetGadgetLayout output,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 		SetGadgetFilter output,outputfilter,Self
-		SetGadgetText output," "	'simon was here		
+		SetGadgetText output," "	'simon was here
 		host.options.outputstyle.apply output
 	End Method
 
@@ -4079,7 +4068,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 
 	Function Create:TOutputPanel(host:TCodePlay)
 		Local	o:TOutputPanel = New TOutputPanel
-		o.host=host		
+		o.host=host
 		o.name="{{tab_output}}"
 		o.outputmenu=CreateOutputMenu()
 '		o.Open
@@ -4100,13 +4089,13 @@ Type TCodeNode Extends TNode
 		End Select
 	End Method
 
-	Method Sync(snap:TNode)	
+	Method Sync(snap:TNode)
 		If snap.name<>name SetName(snap.name)
 		Local	n:TCodeNode = TCodeNode(snap)
 		If n pos=n.pos;count=n.count
 		Super.Sync(snap)
 	End Method
-	
+
 	Method SetName(n$)
 		Local	p = n.find("'")
 		If p<>-1 n=n[..p]
@@ -4114,17 +4103,17 @@ Type TCodeNode Extends TNode
 '		If owner.host.options.sortcode
 		sortname=n
 	End Method
-	
+
 	Method Free()
 		owner = Null
 		Super.Free()
 	End Method
-	
+
 	Method AddCodeNode:TCodeNode(n$,p0,p1)
-		
+
 		Local t$
 		Local i:Int = n.find(" ")	'if space then group
-		
+
 		If i>0
 			t=n[..i]
 			n=n[i+1..]
@@ -4137,16 +4126,16 @@ Rem
 			EndIf
 EndRem
 		EndIf
-		
+
 		Local c:TCodeNode = New TCodeNode
 		c.owner=owner
 		c.setname n$
 		c.pos=p0
 		c.count=p1-p0
 		Append(c)
-		
+
 		Return c
-		
+
 	End Method
 End Type
 
@@ -4155,9 +4144,9 @@ Type TDiff
 End Type
 
 Type TOpenCode Extends TToolPanel
-	
+
 	Global msgHighlightingStatus$ = "Highlighting"
-	
+
 	Field	host:TCodePlay
 	Field	textarea:TGadget
 	Field	dirty=True
@@ -4175,11 +4164,11 @@ Type TOpenCode Extends TToolPanel
 	Field	editmenu:TGadget
 	Field	codenode:TCodeNode
 	Field	dirtynode,uc
-	
+
 	Function RefreshHighlightingMsg()
 		msgHighlightingStatus = LocalizeString("{{msg_highlightingcode}}")
 	EndFunction
-	
+
 	Function IsNotAlpha(c)
 		If c<48 Return True
 		If c>=58 And c<65 Return True
@@ -4187,7 +4176,7 @@ Type TOpenCode Extends TToolPanel
 		If c>=96 And c<97 Return True
 		If c>=123 Return True
 	End Function
-	
+
 	Function WordAtPos$(a$,p)
 		Local	c,q,r,n
 	' string literal
@@ -4199,7 +4188,7 @@ Type TOpenCode Extends TToolPanel
 				r=q
 			EndIf
 		Next
-		If n	
+		If n
 			q=a.Find("~q",r+1)+1
 			If q=0 q=a.length
 			Return a[r..q]
@@ -4218,15 +4207,15 @@ Type TOpenCode Extends TToolPanel
 		Next
 		Return a[q+1..r]
 	End Function
-	
+
 	Function FirstDiff(s0$,s1$)
 		Local	n = Min(s0.length,s1.length)
 		For Local i:Int = 0 Until n
 			If s0[i]<>s1[i] Return i
 		Next
-		Return n		
+		Return n
 	End Function
-	
+
 	Function LastDiff(s0$,s1$)
 		Local n = Min(s0.length,s1.length)
 		Local i = s0.length-1
@@ -4237,7 +4226,7 @@ Type TOpenCode Extends TToolPanel
 		Wend
 		Return i+1
 	End Function
-	
+
 	Method parsebmx(n:TCodeNode)
 		Local	src$,line,col
 		Local	p,p1,r,t,m,f,l,e
@@ -4266,7 +4255,7 @@ Type TOpenCode Extends TToolPanel
 				Continue
 			EndIf
 			p=Min(t,Min(m,Min(f,l)))
-			If p=src.length Exit		
+			If p=src.length Exit
 			While (n And n.parent And p>n.pos+n.count)
 				If Not TCodeNode(n.parent)
 					If n.parent.parent
@@ -4294,16 +4283,16 @@ Type TOpenCode Extends TToolPanel
 				e=src.find(EOL,f)
 				n.AddCodeNode(cleansrc[f..e],f,e)
 				p=f+1
-				Continue		
+				Continue
 			Else
 				e=src.find(EOL,l)
 				n.AddCodeNode(cleansrc[l..e],l,e)
 				p=l+1
-				Continue				
+				Continue
 			EndIf
 		Wend
 	End Method
-	
+
 	Method GetNode:TNode()
 		Local	root:TCodeNode = New TCodeNode
 		root.name = StripDir(path)
@@ -4312,14 +4301,14 @@ Type TOpenCode Extends TToolPanel
 		If isbmx parsebmx(root) ' stopped code view parse on non bmx files
 		If codenode
 			If host.options.sortcode root.sortkids
-			codenode.Sync(root)	
+			codenode.Sync(root)
 			root.Free()
 		Else
 			codenode=root
 		EndIf
 		Return codenode
 	End Method
-	
+
 	Method HighlightLine(line,column = 0)
 		Local i:Int, tmpCharLineStart% = TextAreaChar(textarea,line)
 		Local tmpLine$ = TextAreaText( textarea, line, 1, TEXTAREA_LINES ).Replace("~r","").Replace("~n","")
@@ -4335,7 +4324,7 @@ Type TOpenCode Extends TToolPanel
 			SelectTextAreaText textarea,tmpCharLineStart,tmpLine.length-i,TEXTAREA_CHARS
 		EndIf
 	EndMethod
-	
+
 	Method ShowPos(pos)
 		host.SelectPanel( Self )
 		HighlightLine( TextAreaLine(textarea,pos) )
@@ -4353,13 +4342,13 @@ Type TOpenCode Extends TToolPanel
 		ActivateGadget( textarea )
 		UpdateStatus()
 	End Method
-	
+
 	Method UpdateStatus()
 		Local	c = cursorpos+cursorlen
 		If cursorline Then c:-TextAreaChar(textarea,cursorline-1)
 		host.SetStatus helpstring+"~t~t"+LocalizeString("{{status_line_char}}").Replace("%1",cursorline).Replace("%2",(c+1))
 	End Method
-	
+
 	Method UpdateCursor()
 		oldpos=cursorpos
 		oldlen=cursorlen
@@ -4403,8 +4392,8 @@ Type TOpenCode Extends TToolPanel
 					d.add=src[oldpos..cursorpos+cursorlen]
 					d.pos1=oldpos
 				EndIf
-			EndIf	
-		Else		
+			EndIf
+		Else
 			If cursorpos>oldpos									'overwrite
 				d=New TDiff
 				d.pos0=cursorpos
@@ -4417,7 +4406,7 @@ Type TOpenCode Extends TToolPanel
 				If d.del = d.add Then d.textchange=False
 			EndIf
 		EndIf
-		Return d	
+		Return d
 	End Method
 
 	Method UpdateCode(makeundo=True)
@@ -4434,7 +4423,7 @@ Type TOpenCode Extends TToolPanel
 		EndIf
 		If (deferpos >= 0) Or (tidyqueue1 >= 0) Or (tidyqueue2 >= 0) Then SetCode src
 	End Method
-	
+
 	Method Undo()
 		Local	d:TDiff
 		If undolist.IsEmpty() Return
@@ -4460,10 +4449,10 @@ Type TOpenCode Extends TToolPanel
 	Method RefreshStyle()
 		Local	rgb:TColor
 		Local	src$
-		Local charwidth				
+		Local charwidth
 		charwidth=host.options.editfont.CharWidth(32)
-		SetTextAreaTabs textarea,host.options.tabsize*charwidth		
-		SetMargins textarea,4		
+		SetTextAreaTabs textarea,host.options.tabsize*charwidth
+		SetMargins textarea,4
 		SetTextAreaFont textarea,host.options.editfont
 		rgb=host.options.editcolor
 		SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,True
@@ -4485,7 +4474,7 @@ Type TOpenCode Extends TToolPanel
 		If c=96 Return True
 		If c>=123 Return True
 	End Function
-	
+
 	Function IsntAlphaNumericOrQuote(c)		'lowercase test only
 		If c=34 Return False
 		If c<48 Return True
@@ -4526,9 +4515,9 @@ Type TOpenCode Extends TToolPanel
 			If q<0 Return p
 			pos=p+1
 		Wend
-		Return src.length	
+		Return src.length
 	End Function
-	
+
 	Function FindToken(token$,src$,pos)	'lowercase src only!
 		Local p,c
 		Local n=token.length
@@ -4551,7 +4540,7 @@ Type TOpenCode Extends TToolPanel
 
 	Function FindEndToken(token$,src$,pos,returnlast=False)	'if true returns first character after endtoken
 		Local	p,q,e$,n
-		
+
 		p=pos
 		e$="end"+token
 		n=e.length
@@ -4606,7 +4595,7 @@ Type TOpenCode Extends TToolPanel
 	End Function
 
 	Function FindEndRem(src$,pos,returnlast=False)
-		Local	i,c		
+		Local	i,c
 		While pos<src.length
 			pos=FindEndToken("rem",src,pos)
 			If pos=src.length Exit
@@ -4627,20 +4616,20 @@ Type TOpenCode Extends TToolPanel
 		While pos>0
 			If pos>src.length Exit	'fixed endrem on lastline overrun
 			p=src.FindLast("rem",src.length-pos)
-			If p=-1 Exit						
-			If ( p>=src.length-3 Or isntalphanumeric(src[p+3]) ) And IsFirstCharOnLine(src,p) Return p			
+			If p=-1 Exit
+			If ( p>=src.length-3 Or isntalphanumeric(src[p+3]) ) And IsFirstCharOnLine(src,p) Return p
 			pos=p-1
 		Wend
 		Return -1
 	End Function
-	
+
 	Method IsRemmed(pos,src$)
 		Local p = FindPrevRem(src$,Min(pos+3,src.length))
 		If p<0 Return
 		p=FindEndRem(src$,p)
 		If p<0 Or pos<p Return True
 	EndMethod
-	
+
 	Method WasRemmed(pos,src$)
 		Local s$ = cleansrcl
 		Local p = (src.length-s.length)
@@ -4654,24 +4643,24 @@ Type TOpenCode Extends TToolPanel
 	Method CheckDirty(src$)
 		SetDirty (Not (src=filesrc And undolist.IsEmpty()))
 	End Method
-	
+
 	Method HasTidyQueue()
 		Return ((deferpos >= 0) Or (tidyqueue1 >= 0) Or (tidyqueue2 >= 0))
 	EndMethod
-	
+
 	Method ClearTidyQueue(start,endpos)
 		If start<=deferpos And deferpos < endpos Then deferpos = -1
 		If start<=tidyqueue1 And tidyqueue1 < endpos Then tidyqueue1 = -1
 		If start<=tidyqueue2 And tidyqueue2 < endpos Then tidyqueue2 = -1
 	EndMethod
-	
+
 	Method SetCode(src$,diff:TDiff=Null)
 		Local	same,i,p,startp,p1,q,r,a,t$,h$,lsrc$,r0,r1,cpos,autocap
 		Local	style:TTextStyle[5],s:TTextStyle
-' update dirty flag	
+' update dirty flag
 		CheckDirty src
 		same = Not ((diff) Or (src<>cleansrc))
-		If same And Not (diff Or HasTidyQueue()) Then Return	
+		If same And Not (diff Or HasTidyQueue()) Then Return
 		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight
 			If Not same Then
 				cleansrc=src
@@ -4686,7 +4675,7 @@ Type TOpenCode Extends TToolPanel
 		LockTextArea textarea
 		style=host.options.styles
 ' calculate highlight region
-		
+
 		If diff
 			p=diff.pos
 			p1=p+diff.add.length
@@ -4714,7 +4703,7 @@ Type TOpenCode Extends TToolPanel
 		q=src.length-cleansrc.length
 		If p1-p<q p1=p+q
 		If p1<p p1=p
-		
+
 ' round region to line breaks
 		'Print "p="+p+" p1="+p1
 		If p>src.length p=src.length
@@ -4747,20 +4736,20 @@ Type TOpenCode Extends TToolPanel
 				ClearTidyQueue(p,r1)
 				p=r1
 			EndIf
-		EndIf	
+		EndIf
 ' if was remmed and now isn't move p1 down to nearest rem or endrem
 		If WasRemmed(p,lsrc)
 			r0=FindRem(lsrc,p)
 			r1=FindEndRem(lsrc,r0,True)
-			p1=Max(p1,Min(r0,r1))	
+			p1=Max(p1,Min(r0,r1))
 		EndIf
 ' highlight code
 		ClearTidyQueue(p,p1)
-		
+
 		s=style[NORMAL]
 		If p1>p s.format(textarea,p,p1-p)
 		startp = p
-		
+
 		While p<p1
 			host.UpdateProgress(msgHighlightingStatus,(p*100)/p1)
 			a=src[p]
@@ -4784,7 +4773,7 @@ Type TOpenCode Extends TToolPanel
 				s=style[COMMENT]
 				s.format(textarea,p,q-p)
 				p=q
-				Continue				
+				Continue
 			EndIf
 ' tokens
 			If (a>=65 And a<91) Or (a>=97 And a<123) Or (a=95)
@@ -4815,7 +4804,7 @@ Type TOpenCode Extends TToolPanel
 							s=style[COMMENT]
 						Else
 							deferpos=q
-						EndIf						
+						EndIf
 					EndIf
 					s.format(textarea,p,q-p)
 				EndIf
@@ -4827,7 +4816,7 @@ Type TOpenCode Extends TToolPanel
 				q=p+1
 				Local hexed:Int = (a=$24), binaried:Int = (a=$25), dots:Int = (a=$2E)
 				Local valid:Int = Not(hexed Or binaried Or dots)
-				
+
 				While q<(p1)
 					a=lsrc[q]
 					q:+1
@@ -4877,17 +4866,17 @@ Type TOpenCode Extends TToolPanel
 		EndIf
 '		CheckDirty src	simon was here
 	End Method
-	
+
 	Field currentbrackets:Int[]
-	
+
 	Method BracketMatching(lsrc$,cln1=-1,cln2=-1,alwaysfind:Int = False)
-		
+
 		Local check:Int, depth:Int, style:TTextStyle[] = host.options.styles
 		Local otherchar:Int = 0, absotherchar:Int = 0, othercharpos:Int = 0, limit:Int
 		Local currentchar:Int = 0, currentcharpos:Int = Max(cursorpos-1,0)
-		
+
 		If cursorlen Then Return
-		
+
 		If currentbrackets Then
 			If Not(cln2 > currentbrackets[0] And cln1 <= currentbrackets[0]) Then
 				If currentbrackets[0]>-1 Then tidyqueue1 = currentbrackets[0]
@@ -4898,11 +4887,11 @@ Type TOpenCode Extends TToolPanel
 			currentbrackets = Null
 			If Not alwaysfind Then Return
 		EndIf
-		
+
 		If host.options.bracketmatching And isbmx And Not IsRemmed(currentcharpos,lsrc) Then
-			
+
 			limit = Min(lsrc.length,currentcharpos+2)
-			
+
 			While currentcharpos >= 0 And currentcharpos < limit
 				If IsCode(lsrc,currentcharpos) Then
 					Select lsrc[currentcharpos]
@@ -4917,20 +4906,20 @@ Type TOpenCode Extends TToolPanel
 				EndIf
 				currentcharpos:+1
 			Wend
-			
+
 			If otherchar Then
-				
+
 				absotherchar = (Abs otherchar)
 				currentchar = lsrc[currentcharpos]
-				
+
 				LockTextArea textarea
 				style[MATCHING].format(textarea, currentcharpos, 1)
 				currentbrackets = [currentcharpos,-1]
-				
+
 				othercharpos =  currentcharpos+(otherchar/absotherchar)
-				
+
 				While othercharpos < lsrc.length And othercharpos >= 0
-					
+
 					If IsCode(lsrc,othercharpos) Then
 						Select lsrc[othercharpos]
 							Case Asc(" "), Asc("~t")
@@ -4953,26 +4942,26 @@ Type TOpenCode Extends TToolPanel
 								Else
 									If check < 0 Then Exit Else check = -2
 								EndIf
-							Case Asc(".")	
+							Case Asc(".")
 								check:+1
 							Default
 								If check < 0 Then Exit Else check = 0
 								If lsrc[othercharpos] = lsrc[currentcharpos] Then depth:+1
 						EndSelect
 					EndIf
-					
+
 					othercharpos:+(otherchar/absotherchar)
-					
+
 				Wend
-				
+
 				UnlockTextArea textarea
-				
+
 			EndIf
-			
+
 		EndIf
-		
+
 	EndMethod
-	
+
 	Method AutoIndent()
 		Local	p,q
 		Local c = TextAreaCursor(textarea,TEXTAREA_CHARS)
@@ -4986,11 +4975,11 @@ Type TOpenCode Extends TToolPanel
 			If q>c q=c
 		EndIf
 		SetTextAreaText textarea,EOL$+cleansrc[p..q],c,n
-		SelectTextAreaText textarea,c+1+q-p,0			
+		SelectTextAreaText textarea,c+1+q-p,0
 		UpdateCursor
 		UpdateCode
 	End Method
-	
+
 	Method IndentCode()
 		Local	a$
 ' blockindent
@@ -5026,7 +5015,7 @@ Type TOpenCode Extends TToolPanel
 				a$=TextAreaText(textarea,p0+i,1,TEXTAREA_LINES)
 				If a[0]=32 a$=a$[1..]
 				SetTextAreaText textarea,a$,p0+i,1,TEXTAREA_LINES
-			Next	
+			Next
 		EndIf
 		SelectTextAreaText textarea,p0,p1,TEXTAREA_LINES
 		UpdateCursor
@@ -5056,7 +5045,7 @@ Type TOpenCode Extends TToolPanel
 			this.AutoIndent()
 			Return 0
 		EndIf
-		
+
 		Return 1
 	End Function
 
@@ -5073,7 +5062,7 @@ Type TOpenCode Extends TToolPanel
 				End Select
 		End Select
 	End Method
-			
+
 	Method SetDirty( bool )
 		If dirty=bool Return
 		dirty=bool
@@ -5083,7 +5072,7 @@ Type TOpenCode Extends TToolPanel
 		host.RefreshPanel Self
 		PollSystem
 	End Method
-	
+
 	Method SetLocked( bool )
 		Local locked:TOpenCode = TOpenCode(host.lockedpanel)
 		If locked And locked<>Self locked.SetLocked False
@@ -5097,7 +5086,7 @@ Type TOpenCode Extends TToolPanel
 		EndIf
 		host.RefreshPanel Self
 	End Method
-	
+
 	Method Help()
 		If Not host.quickhelp Return
 		Local p = TextAreaCursor(textarea,TEXTAREA_CHARS)
@@ -5117,7 +5106,7 @@ Type TOpenCode Extends TToolPanel
 	Method Find()
 		host.findreq.ShowFind WordAtPos(cleansrc,TextAreaCursor(textarea,TEXTAREA_CHARS))
 	End Method
-		
+
 	Method FindNext(s$)
 		If s seek=s Else s=seek
 		Local p = TextAreaCursor(textarea,TEXTAREA_CHARS)
@@ -5150,9 +5139,9 @@ Type TOpenCode Extends TToolPanel
 			i=i2+s.length
 			SelectTextAreaText textarea,p,s.length
 			UpdateCursor
-			UpdateCode		
+			UpdateCode
 			SetTextAreaText textarea,r,p,s.length
-			If p<c c=c+r.length-s.length			
+			If p<c c=c+r.length-s.length
 			p:+r.length
 			SelectTextAreaText textarea,p,0
 			UpdateCursor
@@ -5161,7 +5150,7 @@ Type TOpenCode Extends TToolPanel
 		SelectTextAreaText textarea,c,0
 		UpdateCursor
 	End Method
-	
+
 	Method FindReplace(r$)
 		Local n, f$, x$
 		Local p = r.Find("~0")
@@ -5176,13 +5165,13 @@ Type TOpenCode Extends TToolPanel
 			SetTextAreaText textarea,r$,p,n
 			SelectTextAreaText textarea,p+r.length,0
 			UpdateCursor
-			UpdateCode		
+			UpdateCode
 		EndIf
 		Return True
 	End Method
-	
+
 	Method ReadSource(path$)
-		Local	src$		
+		Local	src$
 		src=CacheAndLoadText(path)
 		src=src.Replace(Chr(13),"")
 		src=src.Replace(Chr(11),"")
@@ -5192,9 +5181,9 @@ Type TOpenCode Extends TToolPanel
 		filesrc=TextAreaText(textarea)
 		cleansrc=""
 		cleansrcl=""
-		ActivateGadget textarea		
+		ActivateGadget textarea
 	End Method
-	
+
 	Method SaveSource(file$)
 		If host.options.autobackup
 			DeleteFile file+".bak"
@@ -5204,7 +5193,7 @@ Type TOpenCode Extends TToolPanel
 		filesrc=src
 		src=src.Replace(Chr(13),Chr(10))
 		src=src.Replace(Chr(11),"")
-		Local txt$ = src.Replace$(Chr(10),Chr(13)+Chr(10))		
+		Local txt$ = src.Replace$(Chr(10),Chr(13)+Chr(10))
 
 		Try
 			SaveText txt,file
@@ -5250,7 +5239,7 @@ Type TOpenCode Extends TToolPanel
 				If debug out:+".debug"
 				If threaded out:+".mt"
 				cmd:+" -o "+quote(out$)+" "
-			EndIf		
+			EndIf
 			cmd$:+" "+quote(host.FullPath(path))
 			If run
 				arg$=host.GetCommandLine()
@@ -5267,11 +5256,11 @@ Type TOpenCode Extends TToolPanel
 				cmd=StripDir(path)
 				host.execute cmd,"Building "+cmd
 				ChangeDir cd
-			EndIf			
+			EndIf
 		EndIf
 '		print cmd
 	End Method
-	
+
 	Method Save()
 		Local	file$ = path
 		If host.IsTempPath(path)
@@ -5291,7 +5280,7 @@ Type TOpenCode Extends TToolPanel
 		Select command
 			Case TOOLSHOW
 				host.SetCodeNode GetNode()
-				host.SetTitle path				
+				host.SetTitle path
 ' simon was here				If textarea Edit
 				If textarea ActivateGadget textarea
 
@@ -5332,7 +5321,7 @@ Type TOpenCode Extends TToolPanel
 					ishtml=(ex.ToLower()="html")
 					isc=(ex.ToLower()="c")
 					iscpp=(ex.ToLower()="cpp" Or ex.ToLower()="cxx")
-				EndIf				
+				EndIf
 				SaveSource(file$)
 				RefreshStyle()
 				GetNode().Refresh
@@ -5340,15 +5329,15 @@ Type TOpenCode Extends TToolPanel
 				host.SetTitle path
 			Case TOOLGOTO
 				Local line=Int(String(argument))
-				SelectTextAreaText textarea,line-1,0,TEXTAREA_LINES				
+				SelectTextAreaText textarea,line-1,0,TEXTAREA_LINES
 				UpdateCursor
-				ActivateGadget textarea		
+				ActivateGadget textarea
 			Case TOOLFIND
 				Find
 			Case TOOLFINDNEXT
 				Return FindNext(String(argument))
 			Case TOOLREPLACE
-				Return FindReplace(String(argument))	
+				Return FindReplace(String(argument))
 			Case TOOLBUILD
 				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
@@ -5356,7 +5345,7 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
-				SetLocked False			
+				SetLocked False
 			Case TOOLHELP
 				Help()
 			Case TOOLUNDO
@@ -5386,7 +5375,7 @@ Type TOpenCode Extends TToolPanel
 				GadgetPrint textarea
 		End Select
 	End Method
-		
+
 	Function CreateEditMenu:TGadget()
 		Local	edit:TGadget = CreateMenu("{{popup_edit}}",0,Null)
 		CreateMenu "{{popup_edit_quickhelp}}",MENUQUICKHELP,edit
@@ -5406,9 +5395,9 @@ Type TOpenCode Extends TToolPanel
 		CreateMenu "{{popup_edit_goto}}",MENUGOTO,edit
 		Return edit
 	End Function
-	
+
 	Method MakePathTemp()
-' prepends "." to file name with code borrowed from SaveAs		
+' prepends "." to file name with code borrowed from SaveAs
 		Local file$=ExtractDir(path)+"/."+StripDir(path)
 		SaveSource(file$)
 '		Refresh
@@ -5416,7 +5405,7 @@ Type TOpenCode Extends TToolPanel
 '		setdirty False
 		host.SetTitle path
 	End Method
-	
+
 	Function Create:TOpenCode(path$,host:TCodePlay)
 		Local	code:TOpenCode
 		Local	stream:TStream
@@ -5427,7 +5416,7 @@ Type TOpenCode Extends TToolPanel
 			EndIf
 			stream=ReadFile(path)
 			If Not stream
-'				Notify "Open could not read from "+path		
+'				Notify "Open could not read from "+path
 				Return Null
 			EndIf
 			CloseFile stream
@@ -5448,7 +5437,7 @@ Type TOpenCode Extends TToolPanel
 		SetTextAreaText code.textarea,"~n"
 		SetGadgetLayout code.textarea,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 		code.RefreshStyle()
-		
+
 		If isnew
 			code.SaveSource path
 			code.filesrc="~n"
@@ -5457,7 +5446,7 @@ Type TOpenCode Extends TToolPanel
 			host.UpdateProgress "Reading Stream"
 			code.ReadSource(path)
 		EndIf
-		
+
 		If ExtractExt(path).toLower()="bmx" code.isbmx=True
 		If ExtractExt(path).toLower()="c" code.isc=True
 		If ExtractExt(path).toLower()="cpp" code.iscpp=True
@@ -5477,7 +5466,7 @@ Type TRect
 	Method Set(xpos,ypos,width,height)
 		x=xpos;y=ypos;w=width;h=height
 	End Method
-	
+
 	Method ToString$()
 		Return ""+x+","+y+","+w+","+h
 	End Method
@@ -5492,10 +5481,10 @@ Type TRect
 		w=Int(s[q..r-1])
 		h=Int(s[r..])
 	End Method
-	
+
 	Method IsOutside(tx,ty,tw,th)
 		If x+w<=tx Or y+h<=ty Return True
-		If x>=tx+tw Or y>=ty+th Return True	
+		If x>=tx+tw Or y>=ty+th Return True
 	End Method
 
 End Type
@@ -5504,7 +5493,7 @@ Type TCodePlay
 
 	Const EDITMODE=1
 	Const DEBUGMODE=2
-	
+
 	Field bmxpath$,bmkpath$
 	Field panels:TToolPanel[]
 	Field helppanel:THelpPanel
@@ -5512,10 +5501,9 @@ Type TCodePlay
 	Field output:TOutputPanel
 	Field lockedpanel:TToolPanel
 	Field activepanel:TToolPanel
-	
+
 	Field cmdlinereq:TCmdLineRequester
 	Field cmdline$
-	'Field syncmodsreq:TSyncModsRequester
 	Field gotoreq:TGotoRequester
 	Field findreq:TFindRequester
 	Field replacereq:TReplaceRequester
@@ -5526,18 +5514,18 @@ Type TCodePlay
 	Field projectprops:TProjectProperties
 	Field searchreq:TSearchRequester
 	Field aboutreq:TAboutRequester
-	
-	
+
+
 	Field eventhandlers:TList=New TList
 	Field window:TGadget,menubar:TGadget,toolbar:TGadget,client:TGadget,tabbar:TGadget
 	Field split:TSplitter
 	Field debugtree:TDebugTree
-	
+
 	Field root:TNode
 	Field helproot:TNode
 	Field projects:TProjects
 	Field coderoot:TNode
-	Field navbar:TNavBar	
+	Field navbar:TNavBar
 
 	Field Mode
 	Field debugcode:TOpenCode
@@ -5574,7 +5562,7 @@ Type TCodePlay
 	Field androidenable:TGadget	'menu
 	Field emscriptenenable:TGadget	'menu
 	Field nxenable:TGadget	'menu
-	
+
 	Field platformenabled:Int[8]
 	Const PLATFORMOFFSET:Int = 81
 
@@ -5588,15 +5576,15 @@ Type TCodePlay
 	Field jsenable:TGadget	'menu
 	Field armv7enable:TGadget	'menu
 	Field arm64enable:TGadget	'menu
-	
+
 	Field architectureenabled:Int[10]
 	Const ARCHITECTUREOFFSET:Int = 91
-	
+
 	Const APPSTUBOFFSET:Int = 161
 	Field appstubmenus:TGadget[]
 	Field appstubmenu:TGadget
 
-?MacOS	
+?MacOS
 	Method RanlibMods()
 
 		Local cmd$=Quote( bmxpath+"/bin/bmk" )+" ranlibdir "+Quote( bmxpath+"/mod" )
@@ -5611,11 +5599,11 @@ Type TCodePlay
 		Local	cmd$,version$
 
 		cmd$=bmxpath+"/bin/bcc"
-		
+
 ?win32
 		cmd:+".exe"
 ?
-		
+
 		cmd=Quote(cmd)
 		process=CreateProcess(cmd$,HIDECONSOLE)
 		If process
@@ -5632,24 +5620,12 @@ Type TCodePlay
 			Notify "Unable to determine BlitzMax version.~n~nPlease reinstall BlitzMax to repair this problem."
 			End
 		EndIf
-		
+
 		BCC_VERSION=version.Trim()
-		
+
 '		print "bcc version="+version
-
-		If version.find("(expired)")>-1	'Demo timed out
-			Notify "This demo version of BlitzMax has expired.~n~nPlease visit www.blitzbasic.com to buy the full version."
-			End
-		EndIf
-
-		If version.find("Demo Version")>-1	'Valid demo version
-			is_demo=True
-			Notify version+"~nTo purchase the full version please visit www.blitzbasic.com."
-			Notify ABOUTDEMO
-		EndIf
-		
 	End Method
-	
+
 	Method OpenProgress(message$)
 '		progress.Open message
 		DisableGadget window
@@ -5663,7 +5639,7 @@ Type TCodePlay
 		EnableGadget window
 		progress=0
 	End Method
-	
+
 	Method UpdateProgress(message$,value=0)		'returns false if cancelled
 '		Return progress.Update(message,value)
 		If progress
@@ -5687,7 +5663,7 @@ Type TCodePlay
 	Method IsTempPath(path$)
 		If path[..bmxpath.length+5]=bmxpath+"/tmp/" Return True
 	End Method
-	
+
 	Method AddDefaultProj(p$)
 		Local projdata:TList = New TList
 		projdata.AddLast p
@@ -5697,7 +5673,7 @@ Type TCodePlay
 	Method ReadConfig()
 		Local	stream:TStream
 		Local	f$,p,a$,b$
-' defaults		
+' defaults
 		Local wh=GadgetHeight(Desktop())-80'32
 		Local ww=wh
 		Local wx=(GadgetWidth(Desktop())-ww)/2
@@ -5737,17 +5713,15 @@ Type TCodePlay
 		stream=ReadFile(bmxpath+"/cfg/ide.ini")
 		If Not stream
 			AddDefaultProj "Samples|samples"
-			If Not is_demo
-				AddDefaultProj "Modules Source|mod"
-				AddDefaultProj "BlitzMax Source|src"
-			EndIf
+			AddDefaultProj "Modules Source|mod"
+			AddDefaultProj "BlitzMax Source|src"
 			Return
 		EndIf
-		options.Read(stream)		
+		options.Read(stream)
 		options.Snapshot
 
 		Local projdata:TList
-		
+
 		While Not stream.Eof()
 			f$=stream.ReadLine()
 			p=f.find("=")
@@ -5756,7 +5730,7 @@ Type TCodePlay
 			b$=f[p+1..]
 			Select a$
 				Case "ide_version"
-				
+
 				Case "file_recent"
 					recentfiles.addlast b$
 				Case "file_open"
@@ -5817,28 +5791,26 @@ Type TCodePlay
 					If projdata projdata.AddLast b
 				Case "appstub"
 					selectedappstub = b
-				'Case "sync_state"
-					'syncmodsreq.FromString b$
 			End Select
 		Wend
-		
+
 		If Not guienabled And Not makelibenabled Then
 			consoleenabled = True
 		End If
-		
-		stream.close()		
+
+		stream.close()
 	End Method
-	
+
 	Method WriteConfig()
 		Local	panel:TToolPanel
 		Local	node:TNode
 		Local	f$
-		
+
 		Local	stream:TStream = WriteFile(bmxpath+"/cfg/ide.ini")
 		If Not stream Return
 ' options
 		options.write(stream)
-' defaults		
+' defaults
 		stream.WriteLine "[Defaults]"
 		stream.WriteLine "ide_version="+IDE_VERSION$
 		stream.WriteLine "prg_quick="+quickenabled
@@ -5870,7 +5842,6 @@ Type TCodePlay
 		If selectedappstub Then
 			stream.WriteLine "appstub="+selectedappstub
 		End If
-		'stream.WriteLine "sync_state="+syncmodsreq.ToString()
 		If lockedpanel stream.WriteLine "prg_locked="+lockedpanel.path
 		Local n:Int
 		For f$=EachIn recentfiles
@@ -5883,10 +5854,10 @@ Type TCodePlay
 			f$=panel.path
 			If f$ And Not IsTempPath(f$) stream.WriteLine "file_open="+f$
 		Next
-		projects.write(stream)	
+		projects.write(stream)
 		stream.close
 	End Method
-	
+
 	Method CloseAll(dontask,inccurrent=True)	'returns true if successful
 		Local	count, cancel
 		For Local panel:TToolPanel = EachIn panels
@@ -5911,13 +5882,13 @@ Type TCodePlay
 	Method DebugExit()
 		If debugcode
 			debugtree.cancontinue = False
-			debugcode.Edit		'restore cursor etc.	
+			debugcode.Edit		'restore cursor etc.
 			debugcode=Null
 		EndIf
 		SetMode EDITMODE
 		RefreshToolbar()
 	End Method
-		
+
 	Method DebugSource(path$,line,column)
 		Local	code:TOpenCode
 		path=FullPath(path)
@@ -5928,11 +5899,11 @@ Type TCodePlay
 		EndIf
 		If debugcode And debugcode<>code Then debugcode.Edit()	'restore cursor etc.
 		debugcode=code
-		debugcode.debug(line,column)	
+		debugcode.debug(line,column)
 		ActivateWindow window
 		PollSystem
 	End Method
-	
+
 	Method SetMode(m)
 		If Mode=m Return
 		ActivateWindow window
@@ -5946,12 +5917,12 @@ Type TCodePlay
 		Mode=m
 		RefreshToolbar
 	End Method
-	
+
 	Method RefreshMenu()
 		TOpenCode.RefreshHighlightingMsg()
 		UpdateWindowMenu window
 	EndMethod
-	
+
 	Method RefreshToolbar()
 		Local	i
 ' sourceedit buttons
@@ -5969,7 +5940,7 @@ Type TCodePlay
 			DisableGadgetItem toolbar,TB_SAVE
 			For i=TB_CUT To TB_FIND
 				DisableGadgetItem toolbar,i
-			Next			
+			Next
 		EndIf
 ' debug buttons
 		If Mode = DEBUGMODE And debugtree.cancontinue Then
@@ -5988,21 +5959,21 @@ Type TCodePlay
 				DisableGadgetItem toolbar,i
 			EndIf
 		Next
-' stop button		
+' stop button
 		If output And output.process
 			EnableGadgetItem toolbar,TB_STOP
 		Else
 			DisableGadgetItem toolbar,TB_STOP
-		EndIf		
+		EndIf
 	End Method
-	
+
 	Method IsSourceOpen(path$)
 		Local	p$ = FullPath(path)
 		For Local panel:TToolPanel = EachIn panels
 			If panel.path=p Return True
 		Next
 	End Method
-	
+
 	Method OpenSource:TOpenCode(path$)
 		Local	code:TOpenCode
 		Local	ext$,p$
@@ -6018,7 +5989,7 @@ Type TCodePlay
 				Return TOpenCode(panel)
 			EndIf
 		Next
-' open based on extension		
+' open based on extension
 '		Select ExtractExt(Upper(path$))
 '		Case "BMX","TXT","BB","CPP","C","S","I","H","HTML","CSS","BAT","FS","VS","README",""
 			OpenProgress LocalizeString("{{msg_loading}}").Replace("%1",StripDir(path))
@@ -6034,7 +6005,7 @@ Type TCodePlay
 			Return code
 '		end select
 	End Method
-	
+
 	Method AddRecent(path$)
 		For Local f$ = EachIn recentfiles
 			If f$=path$ recentfiles.Remove(f$);Exit
@@ -6043,7 +6014,7 @@ Type TCodePlay
 		RefreshRecentFiles
 		UpdateWindowMenu window
 	End Method
-	
+
 	Method RefreshRecentFiles()
 		Local	n
 		For Local m:TGadget = EachIn recentmenus
@@ -6058,7 +6029,7 @@ Type TCodePlay
 			If n=16 Exit
 		Next
 	End Method
-	
+
 	Method RefreshAppStubs()
 		For Local m:TGadget = EachIn appstubmenus
 			FreeMenu m
@@ -6083,14 +6054,14 @@ Type TCodePlay
 			CheckMenu appstubmenus[0]
 		End If
 	End Method
-	
+
 	Method BuildModules(buildall)
 		Local cmd$,out$,exe$
 		output.Stop
 		SaveAll
 		cmd$=quote(bmkpath)
 		cmd$:+" makemods "
-		
+
 		If buildall cmd$:+"-a "
 		If threadedenabled cmd:+"-h "
 		If verboseenabled cmd:+"-v "
@@ -6102,7 +6073,7 @@ Type TCodePlay
 		Local architecture:String = GetArchitecture()
 		If platform cmd :+ "-l " + platform + " "
 		If architecture cmd :+ "-g " + architecture + " "
-		
+
 		Execute cmd,LocalizeString("{{output_msg_buildingmods}}")
 	End Method
 
@@ -6124,7 +6095,7 @@ Type TCodePlay
 	Method SetCommandLine(Text$)
 		cmdline=Text
 	End Method
-	
+
 	Method SetStatus(Text$)
 		SetStatusText window,Text
 	End Method
@@ -6145,7 +6116,7 @@ Type TCodePlay
 			panel.Debug line,column
 		EndIf
 	End Method
-	
+
 	Method ParseError(err$)
 		Local		mess$,file$,p,q
 		Local		line,column
@@ -6166,7 +6137,7 @@ Type TCodePlay
 				If q=0 q=err.length
 				line=Int(file[p..q-1])
 				column=Int(file[q..])
-				file=FullPath(file[..p-1])				
+				file=FullPath(file[..p-1])
 				SelectError file,column,line
 			EndIf
 			Notify LocalizeString("{{output_error_compileerror}}").Replace("%1",mess)
@@ -6199,17 +6170,17 @@ Type TCodePlay
 			Forever
 		Wend
 	End Method
-		
+
 	Method AddPanel(tabpanel:TToolPanel)
 		Local	panel:TGadget,index
 		index=CountGadgetItems(tabbar)
 		If panels.length<=index panels=panels[..index+1]
 		AddGadgetItem(tabbar,tabpanel.name$,GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED)
-		
-		panel=CreatePanel(0,0,ClientWidth(tabbar),ClientHeight(tabbar),tabbar,0)	'name		
+
+		panel=CreatePanel(0,0,ClientWidth(tabbar),ClientHeight(tabbar),tabbar,0)	'name
 		SetGadgetLayout panel,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 		tabpanel.panel=panel
-		
+
 		tabpanel.index=index
 		panels[index]=tabpanel
 		SelectPanel tabpanel
@@ -6246,7 +6217,7 @@ Type TCodePlay
 		RemoveGadgetItem tabbar,tabpanel.index
 		tabpanel.panel=Null
 	End Method
-		
+
 	Method HookRequester(req:TRequester)
 		If Not activerequesters.Contains(req) Then
 			If req.IsModal() Then
@@ -6258,7 +6229,7 @@ Type TCodePlay
 			activerequesters.AddFirst(req)
 		EndIf
 	End Method
-	
+
 	Method UnhookRequester(req:TRequester)
 		If activerequesters.Contains(req) Then
 			activerequesters.Remove(req)
@@ -6270,13 +6241,13 @@ Type TCodePlay
 			EndIf
 		EndIf
 	EndMethod
-	
+
 	Method SetTitle(title$="")
 		If title title=" - "+title
 		SetGadgetText window,"MaxIDE"+title
 	End Method
-	
-	Method SelectPanel(panel:TToolPanel)	
+
+	Method SelectPanel(panel:TToolPanel)
 		Local	curr:TToolPanel = currentpanel
 		currentpanel=panel
 		If curr And curr<>currentpanel
@@ -6288,9 +6259,9 @@ Type TCodePlay
 		EndIf
 		currentpanel.Invoke TOOLSHOW
 	End Method
-		
+
 	Method RefreshPanel(panel:TToolPanel)	'call after a name change
-		ModifyGadgetItem( tabbar,panel.index,panel.name,GADGETITEM_LOCALIZED )	
+		ModifyGadgetItem( tabbar,panel.index,panel.name,GADGETITEM_LOCALIZED )
 	End Method
 
 	Function OutsideDesktop(winrect:TRect)
@@ -6316,11 +6287,11 @@ Type TCodePlay
 		EndIf
 	End Method
 
-	Method Initialize()		
+	Method Initialize()
 		Local	open:TOpenCode, splash:TGadget
 		Local	dir$,nomods,pname$,p
 		Local	stream:TStream
-		
+
 		Try
 			bmxpath=BlitzMaxPath()
 		Catch err$
@@ -6368,23 +6339,22 @@ Type TCodePlay
 				End
 			EndIf
 		EndIf
-		
+
 		CheckVersion()
-		
+
 		splash=CreateWindow("MaxIDE",ScaledSize(200),ScaledSize(200),ScaledSize(400),ScaledSize(160),Null,WINDOW_CLIENTCOORDS|WINDOW_HIDDEN|WINDOW_CENTER)
 			Local panel:TGadget = CreatePanel(0,0,ClientWidth(splash),ClientHeight(splash),splash,0)
 			SetPanelColor panel,255,255,255;SetPanelPixmap panel, LoadPixmapPNG("incbin::splash.png"), PANELPIXMAP_FIT2
 			Local progress:TGadget = CreateProgBar(ScaledSize(2),ClientHeight(panel)-ScaledSize(22),ClientWidth(panel)-ScaledSize(4),ScaledSize(20),panel)
 			ShowGadget splash;PollSystem
-		
+
 		window=CreateWindow("MaxIDE",20,20,760,540,Null,WINDOW_TITLEBAR|WINDOW_RESIZABLE|WINDOW_STATUS|WINDOW_HIDDEN|WINDOW_ACCEPTFILES|WINDOW_MENU)
-		
+
 		?Linux
 		SetGadgetPixmap(window, LoadPixmapPNG("incbin::window_icon.png"), GADGETPIXMAP_ICON )
 		?
-		
+
 		cmdlinereq=TCmdLineRequester.Create(Self)
-		'syncmodsreq=TSyncModsRequester.Create(Self)
 		gotoreq=TGotoRequester.Create(Self)
 		findreq=TFindRequester.Create(Self)
 		replacereq=TReplaceRequester.Create(Self)
@@ -6394,7 +6364,7 @@ Type TCodePlay
 		projectprops=TProjectProperties.Create(Self)
 		searchreq=TSearchRequester.Create(Self)
 		aboutreq=TAboutRequester.Create(Self)
-		
+
 		UpdateProgBar progress, 0.1;PollSystem
 		ReadConfig()
 
@@ -6404,44 +6374,44 @@ Type TCodePlay
 			tbSize = "_48"
 		Else If scale > 2 Then
 			tbSize = "_64"
-		End If			
-			
+		End If
+
 		toolbar=CreateToolBar("incbin::toolbar" + tbSize + ".png",0,0,0,0,window )
-		
+
 		RemoveGadgetItem toolbar, TB_CONTINUE
-		
+
 		'Rem
 		SetToolBarTips toolbar, ["{{tb_new}}","{{tb_open}}","{{tb_close}}","{{tb_save}}","","{{tb_cut}}","{{tb_copy}}","{{tb_paste}}","{{tb_find}}","",..
 		                         "{{tb_build}}","{{tb_buildrun}}","{{tb_step}}","{{tb_stepin}}","{{tb_stepout}}","{{tb_stop}}","","{{tb_home}}","{{tb_back}}","{{tb_forward}}"]
 		'End Rem
-		
+
 		If Not options.showtoolbar Then HideGadget toolbar
 
 		If OutsideDesktop(winsize)
-			winsize.set(20,20,760,540)		
+			winsize.set(20,20,760,540)
 		EndIf
-		
+
 		UpdateProgBar progress, 0.2;PollSystem
-		
+
 		SetGadgetShape(window, winsize.x, winsize.y, winsize.w, winsize.h)
 
 		client=window
-		
+
 		split=CreateSplitter(0,0,ClientWidth(client),ClientHeight(client),client,SPLIT_VERTICAL)
 		SetGadgetLayout(split,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
-		
+
 		tabbar=CreateTabber(0,0,ClientWidth(SplitterPanel(split,SPLITPANEL_MAIN)),ClientHeight(SplitterPanel(split,SPLITPANEL_MAIN)),SplitterPanel(split,SPLITPANEL_MAIN))
 		SetGadgetLayout(tabbar,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
-		
+
 		debugtree=TDebugTree.CreateDebugTree(Self)
 
 		root=TNode.CreateNode("{{navtab_home}}")
-		
+
 		helproot=root.AddNode("{{navnode_help}}")
-		
-		projects=TProjects.CreateProjects(Self)		
+
+		projects=TProjects.CreateProjects(Self)
 		root.Append projects
-	
+
 '		opencoderoot=root.AddNode("Open")
 		coderoot=TNode.CreateNode("{{navtab_code}}")
 		coderoot.Open()
@@ -6457,47 +6427,47 @@ Type TCodePlay
 		projects.Open
 
 		AddHandler navbar
-	
+
 		SetMode EDITMODE
-		
+
 		UpdateProgBar progress, 0.3;PollSystem
-			
+
 		quickhelp=TQuickHelp.LoadCommandsTxt(bmxpath)
 
 		helppanel=THelpPanel.Create(Self)
-		
+
 		output=TOutputPanel.Create(Self)
-		
+
 		activepanel=helppanel
 		InitMenu
 		InitHotkeys
 
 		RefreshAll
-		
+
 		UpdateProgBar progress, 0.4;PollSystem 'allow repaint
-		
+
 		Local mkdocs
 		If FileType( bmxpath+"/docs/html/User Guide/index.html" )<>FILETYPE_FILE
 			CreateDir bmxpath+"/docs/html"
 			CreateFile bmxpath+"/docs/html/index.html"
 			mkdocs=True
 		EndIf
-		
+
 		helppanel.Home()
-		
+
 		UpdateProgBar progress, 0.5;PollSystem
-		
+
 ' scan projects in projlist
 		For Local pdata:TList = EachIn projlist
 			projects.AddProject pdata
 		Next
-		
+
 		UpdateProgBar progress, 0.6;PollSystem
-		
+
 		Local tmpProgValue# = 0.6
 		Local tmpProgStep#
-		
-'open files from .ini restorelist		
+
+'open files from .ini restorelist
 		If options.restoreopenfiles
 			If Not openlist.IsEmpty() Then tmpProgStep = (0.3/openlist.Count())
 			For Local f$=EachIn openlist
@@ -6506,39 +6476,37 @@ Type TCodePlay
 				tmpProgValue:+tmpProgStep;UpdateProgBar progress,tmpProgValue
 			Next
 		EndIf
-		
+
 		tmpProgValue = 0.9
 		If AppArgs.length > 1 Then tmpProgStep = (0.1/(AppArgs.length-1)) Else tmpProgValue = 1.0
 		UpdateProgBar progress,tmpProgValue;PollSystem
-		
-' open files specified in command line		
+
+' open files specified in command line
 		For Local i:Int = 1 Until AppArgs.length
 			open=OpenSource(AppArgs[i])
 			tmpProgValue:+tmpProgStep;UpdateProgBar progress,tmpProgValue;PollSystem
 		Next
-		
+
 		HideGadget splash;FreeGadget splash
 		PollSystem
-		
+
 		SetSplitterPosition(split,splitpos);SetSplitterOrientation(split,splitorientation)
-		
+
 		If winmax MaximizeWindow(window)
-		ShowGadget window	
-		
+		ShowGadget window
+
 		PollSystem
 		running=True
-		
+
 		CreateTimer(TIMER_FREQUENCY)
-		
-		'If nomods syncmodsreq.Show	
-		
-'build docs if not there		
+
+'build docs if not there
 		If mkdocs
 			If Confirm( LocalizeString("{{loaderror_docsnotfound}}") ) And CloseAll( False ) DocMods
 		EndIf
-		
+
 	End Method
-	
+
 	Method DocMods()
 		Local cmd$=quote(bmxpath+"/bin/makedocs")
 		execute cmd,LocalizeString("{{output_msg_rebuildingdocs}}"),MENUTRIGGERSYNCDOCS
@@ -6546,7 +6514,7 @@ Type TCodePlay
 		RanLibMods()
 	?
 	End Method
-		
+
 	Method SyncDocs()
 		helppanel.SyncDocs()
 		quickhelp=TQuickHelp.LoadCommandsTxt(bmxpath)
@@ -6556,7 +6524,7 @@ Type TCodePlay
 	Method InitMenu()
 		Local menu:TGadget,file:TGadget,edit:TGadget,program:TGadget,tools:TGadget
 		Local help:TGadget,buildoptions:TGadget,devoptions:TGadget
-		Local buildmods:TGadget,buildallmods:TGadget,syncmods:TGadget,docmods:TGadget
+		Local buildmods:TGadget,buildallmods:TGadget,docmods:TGadget
 		Local platform:TGadget,architecture:TGadget
 		Local appoptions:TGadget
 
@@ -6592,13 +6560,13 @@ Type TCodePlay
 ?
 		Else
 			CreateMenu "{{menu_file_nexttab}}",MENUNEXT,file,KEY_RIGHT,MENUMOD
-			CreateMenu "{{menu_file_prevtab}}",MENUPREV,file,KEY_LEFT,MENUMOD		
+			CreateMenu "{{menu_file_prevtab}}",MENUPREV,file,KEY_LEFT,MENUMOD
 		EndIf
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_importbb}}",MENUIMPORTBB,file
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_ideoptions}}",MENUOPTIONS,file
-		CreateMenu "{{menu_file_projectmanager}}",MENUPROJECTMANAGER,file	
+		CreateMenu "{{menu_file_projectmanager}}",MENUPROJECTMANAGER,file
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_print}}",MENUPRINT,file,KEY_P,MENUMOD
 ?Not MacOS
@@ -6634,7 +6602,7 @@ Type TCodePlay
 ?
 		CreateMenu "",0,edit
 		CreateMenu "{{menu_edit_findinfiles}}",MENUFINDINFILES,edit,KEY_F,MENUMOD|MODIFIER_SHIFT
-		
+
 		program=CreateMenu("{{menu_program}}",0,menu)
 		CreateMenu "{{menu_program_build}}",MENUBUILD,program,KEY_B,MENUMOD
 		CreateMenu "{{menu_program_buildandrun}}",MENURUN,program,KEY_R,MENUMOD
@@ -6652,7 +6620,7 @@ Type TCodePlay
 			Or (FileType( BlitzMaxpath()+"/mod/brl.mod/blitz.mod/bdwgc" )=FILETYPE_DIR)
 				threadedenable=CreateMenu("{{menu_program_buildoptions_threaded}}",MENUTHREADEDENABLED,buildoptions)
 		EndIf
-		
+
 		appoptions=CreateMenu("{{menu_program_appoptions}}",0,program)
 		consoleenable=CreateMenu("{{menu_program_buildoptions_consoleapp}}",MENUCONSOLEENABLED,appoptions)
 		guienable=CreateMenu("{{menu_program_buildoptions_guiapp}}",MENUGUIENABLED,appoptions)
@@ -6694,7 +6662,7 @@ Type TCodePlay
 		arm64enable=CreateMenu("{{menu_program_arch_arm64}}",MENUARM64ENABLED,architecture)
 
 		appstubmenu=CreateMenu("{{menu_program_appstub}}",0,program)
-		
+
 		devoptions=CreateMenu("{{menu_program_buildoptions_dev}}",0,program)
 		verboseenable=CreateMenu("{{menu_program_buildoptions_verbose}}",MENUVERBOSEENABLED,devoptions)
 		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
@@ -6703,19 +6671,17 @@ Type TCodePlay
 		CreateMenu "{{menu_program_lockbuildfile}}",MENULOCKBUILD,program
 		CreateMenu "{{menu_program_unlockbuildfile}}",MENUUNLOCKBUILD,program
 		CreateMenu "",0,program
-		'syncmods=CreateMenu("{{menu_program_syncmods}}",MENUSYNCMODS,program)
-		'CreateMenu "",0,program
 		buildmods=CreateMenu("{{menu_program_buildmods}}",MENUBUILDMODULES,program,KEY_D,MENUMOD)
 		buildallmods=CreateMenu("{{menu_program_rebuildallmods}}",MENUBUILDALLMODULES,program)
 		docmods=CreateMenu("{{menu_program_rebuilddocs}}",MENUDOCMODS,program)
-		
+
 		help=CreateMenu("{{menu_help}}",0,menu)
 		CreateMenu "{{menu_help_home}}",MENUHOME,help
 		CreateMenu "{{menu_help_back}}",MENUBACK,help
 		CreateMenu "{{menu_help_forward}}",MENUFORWARD,help
 		CreateMenu "{{menu_help_quickhelp}}",MENUQUICKHELP,help,KEY_F1
 		CreateMenu "{{menu_help_aboutmaxide}}",MENUABOUT,help
-		
+
 		If quickenabled CheckMenu quickenable
 		If debugenabled CheckMenu debugenable
 		If threadedenabled CheckMenu threadedenable
@@ -6748,8 +6714,8 @@ Type TCodePlay
 			End If
 		Next
 		'UpdateArchitectureMenus()
-		
-?Win32		
+
+?Win32
 		Local mingw$=BlitzMaxPath() + "/MinGW32"
 		If Not FileType(mingw) Then
 			mingw = getenv_("MINGW")
@@ -6760,10 +6726,7 @@ Type TCodePlay
 		EndIf
 
 ?
-'		If is_demo
-'			DisableMenu syncmods
-'		EndIf
-		
+
 		RefreshRecentFiles
 		RefreshAppStubs
 		UpdateWindowMenu window
@@ -6782,7 +6745,7 @@ Type TCodePlay
 			activepanel.invoke TOOLRUN
 		EndIf
 	End Method
-	
+
 	Method BuildCode()
 		output.Stop()
 		SaveAll()
@@ -6792,35 +6755,35 @@ Type TCodePlay
 			activepanel.invoke TOOLBUILD
 		EndIf
 	End Method
-		
-		
+
+
 	Method AddEventHotKey(key,mods,id,data)
 		SetHotKeyEvent key,mods,CreateEvent(id,Null,data)
 	End Method
-		
+
 	Method InitHotkeys()
 		AddEventHotKey KEY_F5,MODIFIER_NONE,EVENT_MENUACTION,MENURUN
 		AddEventHotKey KEY_F7,MODIFIER_NONE,EVENT_MENUACTION,MENUBUILD
 	End Method
-		
+
 	Method SaveAll()
 		For Local panel:TToolPanel = EachIn panels
-			panel.invoke TOOLQUICKSAVE						
+			panel.invoke TOOLQUICKSAVE
 		Next
 	End Method
-	
+
 	Method Restart()
 		If Confirm(LocalizeString("{{request_restart}}"))
 			Quit
 		EndIf
 	End Method
-	
-	Method RefreshAll()	
+
+	Method RefreshAll()
 ' hide/show toolbar
 		If options.showtoolbar Then ShowGadget toolbar Else HideGadget toolbar
 ' refresh panels
 		For Local panel:TToolPanel = EachIn panels
-			panel.invoke TOOLREFRESH						
+			panel.invoke TOOLREFRESH
 		Next
 ' refresh navbar
 		navbar.invoke TOOLREFRESH
@@ -6842,16 +6805,16 @@ Type TCodePlay
 		EndIf
 		options.showtoolbar = Not GadgetHidden(toolbar)
 	End Method
-	
+
 	Method OnMenu(menu,extra:Object=Null)
 		Local	index
-		
+
 		Local	tool:TTool = TTool(extra)
 		If tool
 			tool.invoke(TOOLMENU,""+menu)
 			Return
 		EndIf
-	
+
 		Select menu
 			Case MENUNEW
 				OpenSource ""
@@ -6864,13 +6827,13 @@ Type TCodePlay
 			Case MENUCLOSEOTHERS
 				CloseAll True, False
 			Case MENUSAVE
-				currentpanel.invoke TOOLSAVE						
-			Case MENUSAVEAS			
-				currentpanel.invoke TOOLSAVEAS						
+				currentpanel.invoke TOOLSAVE
+			Case MENUSAVEAS
+				currentpanel.invoke TOOLSAVEAS
 			Case MENUSAVEALL
 				SaveAll()
 			Case MENUPRINT
-				currentpanel.invoke TOOLPRINT						
+				currentpanel.invoke TOOLPRINT
 			Case MENUQUIT
 				Quit()
 
@@ -6890,25 +6853,23 @@ Type TCodePlay
 			Case MENUCOPY currentpanel.invoke TOOLCOPY
 			Case MENUPASTE currentpanel.invoke TOOLPASTE
 			Case MENUSELECTALL currentpanel.invoke TOOLSELECTALL
-										
+
 			Case MENUBUILD
 				BuildCode()
 			Case MENURUN
 				RunCode()
 
 			Case MENUBUILDMODULES
-				If CheckDemo() BuildModules False
+				BuildModules False
 			Case MENUBUILDALLMODULES
-				If CheckDemo() BuildModules True	
-			'Case MENUSYNCMODS
-			'	If CheckDemo() And CloseAll(False) syncmodsreq.Show
+				BuildModules True
 			Case MENUDOCMODS
-				If CheckDemo() And CloseAll(False) DocMods
+				If CloseAll(False) DocMods
 			Case MENUTRIGGERDOCMODS
 				DocMods()
 			Case MENUTRIGGERSYNCDOCS
 				SyncDocs()
-				
+
 			Case MENUSTEP If output output.StepOver()
 			Case MENUSTEPIN If output output.StepIn()
 			Case MENUSTEPOUT If output output.StepOut()
@@ -6918,13 +6879,13 @@ Type TCodePlay
 				activepanel.invoke TOOLLOCK
 			Case MENUUNLOCKBUILD
 				If lockedpanel lockedpanel.invoke TOOLUNLOCK
-			
+
 			Case MENUCOMMANDLINE cmdlinereq.Show
-			
+
 			Case MENUQUICKENABLED
 				If quickenabled
 					quickenabled=False
-					UncheckMenu quickenable							
+					UncheckMenu quickenable
 				Else
 					quickenabled=True
 					CheckMenu quickenable
@@ -6934,28 +6895,28 @@ Type TCodePlay
 			Case MENUDEBUGENABLED
 				If debugenabled
 					debugenabled=False
-					UncheckMenu debugenable							
+					UncheckMenu debugenable
 				Else
 					debugenabled=True
 					CheckMenu debugenable
 				EndIf
 				UpdateWindowMenu window
-				
+
 			Case MENUTHREADEDENABLED
 				If threadedenabled
 					threadedenabled=False
-					UncheckMenu threadedenable							
+					UncheckMenu threadedenable
 				Else
 					threadedenabled=True
 					CheckMenu threadedenable
 				EndIf
 				UpdateWindowMenu window
-				
+
 			Case MENUGUIENABLED
 				If Not guienabled
 					guienabled=True
 					CheckMenu guienable
-					
+
 					consoleenabled=False
 					UncheckMenu consoleenable
 					makelibenabled=False
@@ -6967,7 +6928,7 @@ Type TCodePlay
 				If Not consoleenabled
 					consoleenabled=True
 					CheckMenu consoleenable
-					
+
 					guienabled=False
 					UncheckMenu guienable
 					makelibenabled=False
@@ -6979,7 +6940,7 @@ Type TCodePlay
 				If Not makelibenabled
 					makelibenabled=True
 					CheckMenu makelibenable
-					
+
 					consoleenabled=False
 					UncheckMenu consoleenable
 					guienabled=False
@@ -6990,7 +6951,7 @@ Type TCodePlay
 			Case MENUVERBOSEENABLED
 				If verboseenabled
 					verboseenabled=False
-					UncheckMenu verboseenable							
+					UncheckMenu verboseenable
 				Else
 					verboseenabled=True
 					CheckMenu verboseenable
@@ -7000,7 +6961,7 @@ Type TCodePlay
 			Case MENUQUICKSCANENABLED
 				If quickscanenabled
 					quickscanenabled=False
-					UncheckMenu quickscanenable							
+					UncheckMenu quickscanenable
 				Else
 					quickscanenabled=True
 					CheckMenu quickscanenable
@@ -7010,7 +6971,7 @@ Type TCodePlay
 			Case MENUUNIVERSALENABLED
 				If universalenabled
 					universalenabled=False
-					UncheckMenu universalenable							
+					UncheckMenu universalenable
 				Else
 					universalenabled=True
 					CheckMenu universalenable
@@ -7020,7 +6981,7 @@ Type TCodePlay
 			Case MENUWARNOVERENABLED
 				If warnoverenabled
 					warnoverenabled=False
-					UncheckMenu warnoverenable							
+					UncheckMenu warnoverenable
 				Else
 					warnoverenabled=True
 					CheckMenu warnoverenable
@@ -7030,7 +6991,7 @@ Type TCodePlay
 			Case MENUGDBDEBUGENABLED
 				If gdbdebugenabled
 					gdbdebugenabled=False
-					UncheckMenu gdbdebugenable							
+					UncheckMenu gdbdebugenable
 				Else
 					gdbdebugenabled=True
 					CheckMenu gdbdebugenable
@@ -7041,23 +7002,23 @@ Type TCodePlay
 					MENUANDROIDENABLED, MENUEMSCRIPTENENABLED, MENUIOSENABLED, MENUNXENABLED
 
 				UpdatePlatformMenus(menu)
-				
+
 				UpdateWindowMenu window
 
 			Case MENUX86ENABLED, MENUX64ENABLED, MENUPPCENABLED, MENUARMENABLED, ..
 					MENUARMEABIV5ENABLED, MENUARMEABIV7AENABLED, MENUARM64V8AENABLED, ..
 					MENUJSENABLED, MENUARMV7ENABLED, MENUARM64ENABLED
-				
+
 				UpdateArchitectureMenus(menu)
-				
+
 				UpdateWindowMenu window
 
 			Case MENUIMPORTBB
 				ImportBB
-				
+
 			Case MENUFINDINFILES
 				If activepanel Then searchreq.ShowWithPath( ExtractDir(activepanel.path) ) Else searchreq.Show()
-				
+
 			Case MENUPROJECTMANAGER
 				projectreq.Open projects
 			Case MENUSHOWCONSOLE
@@ -7065,7 +7026,7 @@ Type TCodePlay
 
 			Case MENUOPTIONS
 				options.Show()
-				
+
 			Case MENUNEXT
 				If Not currentpanel Return
 				index=currentpanel.index+1
@@ -7077,10 +7038,10 @@ Type TCodePlay
 				index=currentpanel.index-1
 				If index<0 index=panels.length-1
 				SelectPanel panels[index]
-			
+
 			Case MENUQUICKHELP
 				currentpanel.invoke TOOLHELP
-			
+
 			Case MENUHOME
 				helppanel.Home()
 				SelectPanel helppanel
@@ -7097,10 +7058,10 @@ Type TCodePlay
 				currentpanel.invoke TOOLINDENT
 			Case MENUOUTDENT
 				currentpanel.invoke TOOLOUTDENT
-				
+
 			Case MENUNEWVIEW
 				navbar.invoke TOOLNEWVIEW
-				
+
 		End Select
 
 		If menu>=MENURECENT
@@ -7114,12 +7075,12 @@ Type TCodePlay
 			End If
 		EndIf
 	End Method
-	
+
 	Method UpdatePlatformMenus(menu:Int)
 		Local index:Int = menu - PLATFORMOFFSET
-		
+
 		Local platformChanged:Int = Not platformenabled[index]
-		
+
 		For Local i:Int = 0 Until platformenabled.Length
 			If platformenabled[i] And i <> index Then
 				Select PLATFORMOFFSET + i
@@ -7163,14 +7124,14 @@ Type TCodePlay
 			Case MENUNXENABLED
 				CheckMenu nxenable
 		End Select
-		
+
 		UpdateArchitectureMenuState menu
-		
+
 		If platformChanged Then
 			DefaultArchitectureMenuForPlatform(menu)
 		End If
 	End Method
-	
+
 	Method UpdateArchitectureMenus(menu:Int)
 		Local index:Int = menu - ARCHITECTUREOFFSET
 
@@ -7201,7 +7162,7 @@ Type TCodePlay
 			End If
 			architectureenabled[i] = False
 		Next
-		
+
 		architectureenabled[index] = True
 		Select menu
 			Case MENUX86ENABLED
@@ -7226,7 +7187,7 @@ Type TCodePlay
 				CheckMenu arm64enable
 		End Select
 	End Method
-	
+
 	Method UpdateArchitectureMenuState(platformMenu:Int)
 		DisableMenu x86enable
 		DisableMenu x64enable
@@ -7355,7 +7316,7 @@ Type TCodePlay
 				architectureenabled[MENUARM64ENABLED - ARCHITECTUREOFFSET] = True
 		End Select
 	End Method
-	
+
 	Method GetPlatform:String()
 		For Local i:Int = 0 Until platformenabled.Length
 			If platformenabled[i] Then
@@ -7379,10 +7340,10 @@ Type TCodePlay
 				End Select
 			End If
 		Next
-		
+
 		Return Null
 	End Method
-	
+
 	Method GetArchitecture:String()
 		For Local i:Int = 0 Until architectureenabled.Length
 			If architectureenabled[i] Then
@@ -7410,15 +7371,15 @@ Type TCodePlay
 				End Select
 			End If
 		Next
-		
+
 		Return Null
 	End Method
 
 	Method poll()
-		
+
 		Local	src:TGadget
 		Local event = WaitEvent()
-		
+
 		If Not activerequesters.IsEmpty()
 			Select event
 				Case EVENT_MENUACTION
@@ -7449,7 +7410,7 @@ Type TCodePlay
 		For Local handler:TEventHandler = EachIn eventhandlers
 			handler.OnEvent()
 		Next
-		
+
 		src = TGadget(EventSource())
 
 		Select event
@@ -7460,7 +7421,7 @@ Type TCodePlay
 							Case TB_NEW OpenSource ""
 							Case TB_OPEN OpenSource "."
 							Case TB_CLOSE currentpanel.invoke TOOLCLOSE
-							Case TB_SAVE currentpanel.invoke TOOLSAVE	
+							Case TB_SAVE currentpanel.invoke TOOLSAVE
 							Case TB_CUT currentpanel.invoke TOOLCUT
 							Case TB_COPY currentpanel.invoke TOOLCOPY
 							Case TB_PASTE currentpanel.invoke TOOLPASTE
@@ -7475,29 +7436,29 @@ Type TCodePlay
 							Case TB_BACK helppanel.Back;SelectPanel helppanel
 							Case TB_FORWARDS helppanel.Forward;SelectPanel helppanel
 						End Select
-						
+
 					Case tabbar
 						Local index = EventData()
 						If index>=0 And index<panels.length
 							SelectPanel panels[index]
 						EndIf
 				End Select
-				
+
 			Case EVENT_WINDOWACCEPT, EVENT_APPOPENFILE
 				OpenSource EventText()
-				
+
 			Case EVENT_APPTERMINATE
 				Quit()
-				
+
 			Case EVENT_WINDOWACTIVATE
 				If (src=window) Then SelectPanel currentpanel
-				
+
 			Case EVENT_WINDOWCLOSE
 				If (src=window) Then Quit()
-				
+
 			Case EVENT_WINDOWMOVE, EVENT_WINDOWSIZE
 				If (src=window) Then SnapshotWindow()
-				
+
 			Case EVENT_MENUACTION
 				OnMenu EventData(),EventExtra()
 
