@@ -31,10 +31,9 @@ Import MaxGUI.CocoaMaxGui
 ?win32
 Import MaxGUI.Win32MaxGUIEx
 ?linux
-Import bah.gtkmaxgui
-Import bah.gtkwebgtkhtml
-'Import bah.gtkwebmozilla
-Import bah.maxguitextareascintilla
+Import gtk.gtk3maxgui
+Import gtk.gtk3webkitgtk
+Import gtk.maxguitextareascintilla
 ?
 Import MaxGUI.ProxyGadgets
 
@@ -58,6 +57,8 @@ Import brl.maxutil
 
 Incbin "bmxlogo.png"
 Incbin "toolbar.png"
+Incbin "toolbar_48.png"
+Incbin "toolbar_64.png"
 Incbin "splash.png"
 Incbin "default.language.ini"
 
@@ -403,7 +404,7 @@ Type TRequester
 		host=owner
 		If (flags&STYLE_MODAL) Then flags:|STYLE_STDBORDER
 		
-		If (flags & (STYLE_CANCEL|STYLE_OK)) Then h:+32;If (flags&STYLE_DIVIDER) Then h:+12
+		If (flags & (STYLE_CANCEL|STYLE_OK)) Then h:+ScaledSize(32);If (flags&STYLE_DIVIDER) Then h:+ScaledSize(12)
 		
 		Local windowflags% = WINDOW_TITLEBAR|WINDOW_HIDDEN|WINDOW_CLIENTCOORDS
 		If (flags & STYLE_STATUS) Then windowflags:|WINDOW_STATUS
@@ -419,23 +420,23 @@ Type TRequester
 		
 		If (flags & STYLE_OK) Then
 			
-			ok=CreateButton(oktext,ClientWidth(window)-101,ClientHeight(window)-32,95,26,window,BUTTON_OK)
+			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
 			SetGadgetLayout(ok,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 			
 			If (flags & STYLE_CANCEL) Then
-				cancel=CreateButton("{{btn_cancel}}",6,ClientHeight(window)-32,95,26,window,BUTTON_CANCEL)
+				cancel=CreateButton("{{btn_cancel}}",ScaledSize(6),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_ALIGNED,EDGE_CENTERED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 			
 		Else
 			If (flags & STYLE_CANCEL) Then
-				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-101,ClientHeight(window)-32,95,26,window,BUTTON_CANCEL)
+				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 		EndIf
 		
 		If (flags & STYLE_DIVIDER) And (flags & (STYLE_OK|STYLE_CANCEL)) Then
-			divider = CreateLabel( "", 6, ClientHeight(window)-42, ClientWidth(window)-12, 4, window, LABEL_SEPARATOR )
+			divider = CreateLabel( "", ScaledSize(6), ClientHeight(window)-ScaledSize(42), ClientWidth(window)-ScaledSize(12), ScaledSize(4), window, LABEL_SEPARATOR )
 			SetGadgetLayout(divider,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 		EndIf
 		
@@ -525,7 +526,7 @@ Type TPanelRequester Extends TRequester
 	
 	Method InitPanelRequester(owner:TCodeplay,label$,w=280,h=128)		
 		InitRequester owner,label,w,h,STYLE_OK|STYLE_CANCEL|STYLE_STDBORDER|STYLE_MODAL
-		tabber=CreateTabber(6,6,w-12,h-12,window)
+		tabber=CreateTabber(ScaledSize(6),ScaledSize(6),w-ScaledSize(12),h-ScaledSize(12),window)
 		SetGadgetLayout tabber,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 	End Method
 
@@ -732,11 +733,11 @@ Type TAboutRequester Extends TRequester
 	Function Create:TAboutRequester(host:TCodePlay)
 		
 		Local abt:TAboutRequester = New TAboutRequester
-		abt.initrequester(host,"{{about_window_title}}",420,277,STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		abt.initrequester(host,"{{about_window_title}}",ScaledSize(420),ScaledSize(277),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 		
-		Local win:TGadget = abt.window, w = ClientWidth(abt.window)-12, h = ClientHeight(abt.window)
+		Local win:TGadget = abt.window, w = ClientWidth(abt.window)-ScaledSize(12), h = ClientHeight(abt.window)
 		
-		abt.pnlLogo = CreatePanel(w-(64-6),0,64,64,win)
+		abt.pnlLogo = CreatePanel(w-ScaledSize(64-6),0,ScaledSize(64),ScaledSize(64),win)
 		SetGadgetLayout abt.pnlLogo, EDGE_CENTERED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		
 		'abt.pnlLogo = CreatePanel(0,0,64,64,win)
@@ -754,18 +755,18 @@ Type TAboutRequester Extends TRequester
 ?arm
 		arch = "ARM"
 ?
-		abt.lblTitle = CreateLabel("MaxIDE "+IDE_VERSION + " (" + arch + ")",6,y,w,20,win,LABEL_LEFT)
+		abt.lblTitle = CreateLabel("MaxIDE "+IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
 		SetGadgetFont abt.lblTitle, LookupGuiFont( GUIFONT_SYSTEM, 12, FONT_BOLD )
 		SetGadgetLayout abt.lblTitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		y:+21
 		
-		abt.lblSubtitle = CreateLabel("Copyright Blitz Research Ltd.",6,y,w,22,win,LABEL_LEFT)
+		abt.lblSubtitle = CreateLabel("Copyright Blitz Research Ltd.",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblSubtitle, LookupGuiFont( GUIFONT_SYSTEM, 10, FONT_ITALIC )
 		SetGadgetLayout abt.lblSubtitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		
 		y = 64
 		
-		SetGadgetLayout( CreateLabel("",6,y,w,4,win,LABEL_SEPARATOR), EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
+		SetGadgetLayout( CreateLabel("",ScaledSize(6),ScaledSize(y),w,ScaledSize(4),win,LABEL_SEPARATOR), EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
 		
 		y:+(4+6)
 		
@@ -773,18 +774,18 @@ Type TAboutRequester Extends TRequester
 		
 		For y = y Until (277-21) Step 22
 			
-			tmpGadget = CreateLabel("",6,y,135,22,win,LABEL_LEFT)
+			tmpGadget = CreateLabel("",ScaledSize(6),ScaledSize(y),ScaledSize(135),ScaledSize(22),win,LABEL_LEFT)
 			SetGadgetLayout( tmpGadget, EDGE_ALIGNED, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_CENTERED )
 			abt.lblLeftAligned:+[tmpGadget]
 
-			tmpGadget = CreateLabel("",135+6,y,w-135,22,win,LABEL_LEFT)
+			tmpGadget = CreateLabel("",ScaledSize(135+6),ScaledSize(y),w-ScaledSize(135),ScaledSize(22),win,LABEL_LEFT)
 			SetGadgetLayout( tmpGadget, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
 			DelocalizeGadget tmpGadget
 			abt.lblRightAligned:+[tmpGadget]
 			
 		Next
 		
-		abt.hypBlitz = CreateHyperlink("http://www.blitzbasic.com/",6,(h-28),200,26,win,LABEL_LEFT)
+		abt.hypBlitz = CreateHyperlink("http://www.blitzbasic.com/",ScaledSize(6),(h-ScaledSize(28)),ScaledSize(200),ScaledSize(26),win,LABEL_LEFT)
 		SetGadgetLayout abt.hypBlitz, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED, EDGE_ALIGNED
 		
 		Return abt
@@ -792,7 +793,7 @@ Type TAboutRequester Extends TRequester
 	EndFunction
 	
 	Function Spacer( height:Int, inpout:Int Var )
-		inpout:+height+6
+		inpout:+height+ScaledSize(6)
 		Return height
 	EndFunction
 
@@ -832,9 +833,9 @@ Type TCmdLineRequester Extends TRequester
 
 	Function Create:TCmdLineRequester(host:TCodePlay)
 		Local	cmd:TCmdLineRequester = New TCmdLineRequester
-		cmd.initrequester(host,"{{cmdline_window_title}}",260,60,STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		cmd.label=CreateLabel("{{cmdline_label_cmdline}}:",6,8,260,20,cmd.window)
-		cmd.textfield=CreateTextField(6,30,ClientWidth(cmd.window)-12,21,cmd.window)
+		cmd.initrequester(host,"{{cmdline_window_title}}",ScaledSize(260),ScaledSize(60),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		cmd.label=CreateLabel("{{cmdline_label_cmdline}}:",ScaledSize(6),ScaledSize(8),ScaledSize(260),ScaledSize(20),cmd.window)
+		cmd.textfield=CreateTextField(ScaledSize(6),ScaledSize(30),ClientWidth(cmd.window)-ScaledSize(12),ScaledSize(21),cmd.window)
 		Return cmd
 	End Function
 End Type
@@ -873,9 +874,9 @@ Type TGotoRequester Extends TRequester
 
 	Function Create:TGotoRequester(host:TCodePlay)
 		Local	seek:TGotoRequester = New TGotoRequester
-		seek.initrequester(host,"{{goto_window_title}}",260,66,STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL,"{{goto_btn_goto}}")
-		CreateLabel("{{goto_label_linenum}}:",6,8+4,114,20,seek.window)
-		seek.linenumber=CreateTextField(150,8,ClientWidth(seek.window)-(150+6),21,seek.window)
+		seek.initrequester(host,"{{goto_window_title}}",ScaledSize(260),ScaledSize(66),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL,"{{goto_btn_goto}}")
+		CreateLabel("{{goto_label_linenum}}:",ScaledSize(6),ScaledSize(8+4),ScaledSize(114),ScaledSize(20),seek.window)
+		seek.linenumber=CreateTextField(ScaledSize(150),ScaledSize(8),ClientWidth(seek.window)-ScaledSize(150+6),ScaledSize(21),seek.window)
 		SetGadgetFilter( seek.linenumber, IntegerFilter )
 		Return seek
 	End Function
@@ -983,11 +984,11 @@ Type TTextStyle
 		Local	s:TTextStyle
 		s=New TTextStyle
 		s.color=New TColor
-		s.label=CreateLabel(name,xpos,ypos+4,90,24,window)
-		s.panel=CreatePanel(xpos+94,ypos,24,24,window,PANEL_BORDER|PANEL_ACTIVE)
+		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
+		s.panel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
-		s.combo=CreateComboBox(xpos+122,ypos,96,24,window)
-		s.underline=CreateButton("{{txtstyle_underline}}",xpos+226,ypos,ClientWidth(window)-(xpos+220),24,window,BUTTON_CHECKBOX)
+		s.combo=CreateComboBox(xpos+ScaledSize(122),ypos,ScaledSize(96),ScaledSize(24),window)
+		s.underline=CreateButton("{{txtstyle_underline}}",xpos+ScaledSize(226),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 		AddGadgetItem s.combo,"{{txtstyle_normal}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_bold}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_italic}}",GADGETITEM_LOCALIZED
@@ -1046,10 +1047,10 @@ Type TCaretStyle
 		Local	s:TCaretStyle
 		s=New TCaretStyle
 		s.color=New TColor
-		s.label=CreateLabel(name,xpos,ypos+4,90,24,window)
-		s.panel=CreatePanel(xpos+94,ypos,24,24,window,PANEL_BORDER|PANEL_ACTIVE)
+		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
+		s.panel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
-		s.combo=CreateComboBox(xpos+122,ypos,96,24,window)
+		s.combo=CreateComboBox(xpos+ScaledSize(122),ypos,ScaledSize(96),ScaledSize(24),window)
 		AddGadgetItem s.combo,"{{caretstyle_width_1}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_2}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_3}}",GADGETITEM_LOCALIZED
@@ -1161,11 +1162,11 @@ Type TGadgetStyle
 		s=New TGadgetStyle
 		s.fg=New TColor
 		s.bg=New TColor
-		s.label=CreateLabel(name,xpos,ypos+LABELOFFSET,66,50,window)
-		s.fpanel=CreatePanel(xpos+68,ypos,24,24,window,PANEL_BORDER|PANEL_ACTIVE)
-		s.bpanel=CreatePanel(xpos+96,ypos,24,24,window,PANEL_BORDER|PANEL_ACTIVE)
-		s.fbutton=CreateButton("..",xpos+122,ypos+30,ClientWidth(window)-(xpos+128),24,window)
-		s.fcombo=CreateComboBox(xpos+122,ypos,ClientWidth(window)-(xpos+128),24,window)
+		s.label=CreateLabel(name,xpos,ypos+ScaledSize(LABELOFFSET),ScaledSize(66),ScaledSize(50),window)
+		s.fpanel=CreatePanel(xpos+ScaledSize(68),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.bpanel=CreatePanel(xpos+ScaledSize(96),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.fbutton=CreateButton("..",xpos+ScaledSize(122),ypos+ScaledSize(30),ClientWidth(window)-(xpos+ScaledSize(128)),ScaledSize(24),window)
+		s.fcombo=CreateComboBox(xpos+ScaledSize(122),ypos,ClientWidth(window)-(xpos+ScaledSize(128)),ScaledSize(24),window)
 		AddGadgetItem s.fcombo, "{{options_font_desc_user}}", GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED
 		AddGadgetItem s.fcombo, "{{options_font_desc_guidefault}}", GADGETITEM_LOCALIZED
 		AddGadgetItem s.fcombo, "{{options_font_desc_monospaced}}", GADGETITEM_LOCALIZED
@@ -1522,7 +1523,7 @@ Type TOptionsRequester Extends TPanelRequester
 	
 	Method InitOptionsRequester(host:TCodePlay)		
 		Local	w:TGadget
-		InitPanelRequester(host,"{{options_window_title}}",380,460)
+		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(380), ScaledSize(460))
 ' init values
 		editcolor=New TColor
 ' init gadgets
@@ -1531,58 +1532,58 @@ Type TOptionsRequester Extends TPanelRequester
 		toolpanel=AddPanel("{{options_toolstab}}")
 		appstubpanel=AddPanel("{{options_appstubtab}}")
 		
-		SetGadgetShape( tabber, GadgetX(tabber), GadgetY(tabber)+32, GadgetWidth(tabber), GadgetHeight(tabber)-32 )
+		SetGadgetShape( tabber, GadgetX(tabber), GadgetY(tabber)+ScaledSize(32), GadgetWidth(tabber), GadgetHeight(tabber)-ScaledSize(32) )
 		
 		w=window
-		CreateLabel("{{options_options_label_language}}:",6,6+4,80,24,w)
-		languages = CreateComboBox(90,6,ClientWidth(w)-96,26,w)
+		CreateLabel("{{options_options_label_language}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(80),ScaledSize(24),w)
+		languages = CreateComboBox(ScaledSize(90),ScaledSize(6),ClientWidth(w)-ScaledSize(96),ScaledSize(26),w)
 
 		w=optionspanel
 		
-		buttons[0]=CreateButton("{{options_options_btn_showtoolbar}}",6,6,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[1]=CreateButton("{{options_options_btn_autorestore}}",6,34,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[2]=CreateButton("{{options_options_btn_autocaps}}",6,60,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[3]=CreateButton("{{options_options_btn_syntaxhighlight}}",6,86,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[4]=CreateButton("{{options_options_btn_bracketmatching}}",6,112,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[5]=CreateButton("{{options_options_btn_autobackup}}",6,138,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[6]=CreateButton("{{options_options_btn_autoindent}}",6,164,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[7]=CreateButton("{{options_options_btn_autohideoutput}}",6,190,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[8]=CreateButton("{{options_options_btn_useexternalbrowser}}",6,216,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[9]=CreateButton("{{options_options_btn_osshortcuts}}",6,242,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
-		buttons[10]=CreateButton("{{options_options_btn_sortcodeviewnodes}}",6,268,ClientWidth(w)-12,26,w,BUTTON_CHECKBOX)
+		buttons[0]=CreateButton("{{options_options_btn_showtoolbar}}",ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[1]=CreateButton("{{options_options_btn_autorestore}}",ScaledSize(6),ScaledSize(34),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[2]=CreateButton("{{options_options_btn_autocaps}}",ScaledSize(6),ScaledSize(60),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[3]=CreateButton("{{options_options_btn_syntaxhighlight}}",ScaledSize(6),ScaledSize(86),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[4]=CreateButton("{{options_options_btn_bracketmatching}}",ScaledSize(6),ScaledSize(112),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[5]=CreateButton("{{options_options_btn_autobackup}}",ScaledSize(6),ScaledSize(138),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[6]=CreateButton("{{options_options_btn_autoindent}}",ScaledSize(6),ScaledSize(164),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[7]=CreateButton("{{options_options_btn_autohideoutput}}",ScaledSize(6),ScaledSize(190),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[8]=CreateButton("{{options_options_btn_useexternalbrowser}}",ScaledSize(6),ScaledSize(216),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[9]=CreateButton("{{options_options_btn_osshortcuts}}",ScaledSize(6),ScaledSize(242),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[10]=CreateButton("{{options_options_btn_sortcodeviewnodes}}",ScaledSize(6),ScaledSize(268),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 
 		w=editorpanel
-		CreateLabel("{{options_editor_label_background}}:",6,6+4,90,24,w)
-		editpanel=CreatePanel(100,6,24,24,w,PANEL_BORDER|PANEL_ACTIVE)
-		editbutton=CreateButton("..",128,6,ClientWidth(w)-134,24,w)
+		CreateLabel("{{options_editor_label_background}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(90),ScaledSize(24),w)
+		editpanel=CreatePanel(ScaledSize(100),ScaledSize(6),ScaledSize(24),ScaledSize(24),w,PANEL_BORDER|PANEL_ACTIVE)
+		editbutton=CreateButton("..",ScaledSize(128),ScaledSize(6),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
 		
-		tabbutton=CreateComboBox(128,36,ClientWidth(w)-134,24,w)
+		tabbutton=CreateComboBox(ScaledSize(128),ScaledSize(36),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
 		For Local i=1 To 8
 			AddGadgetItem tabbutton,"{{options_editor_itemlabel_tabsize}} "+(i*2),GADGETITEM_LOCALIZED
 		Next
 		
 		styles=New TTextStyle[6]
-		styles[NORMAL]=TTextStyle.Create("{{options_editor_label_plaintext}}:",6,66,w)
-		styles[COMMENT]=TTextStyle.Create("{{options_editor_label_remarks}}:",6,96,w)
-		styles[QUOTED]=TTextStyle.Create("{{options_editor_label_strings}}:",6,126,w)
-		styles[KEYWORD]=TTextStyle.Create("{{options_editor_label_keywords}}:",6,156,w)
-		styles[NUMBER]=TTextStyle.Create("{{options_editor_label_numbers}}:",6,186,w)
-		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",6,216,w)
+		styles[NORMAL]=TTextStyle.Create("{{options_editor_label_plaintext}}:",ScaledSize(6),ScaledSize(66),w)
+		styles[COMMENT]=TTextStyle.Create("{{options_editor_label_remarks}}:",ScaledSize(6),ScaledSize(96),w)
+		styles[QUOTED]=TTextStyle.Create("{{options_editor_label_strings}}:",ScaledSize(6),ScaledSize(126),w)
+		styles[KEYWORD]=TTextStyle.Create("{{options_editor_label_keywords}}:",ScaledSize(6),ScaledSize(156),w)
+		styles[NUMBER]=TTextStyle.Create("{{options_editor_label_numbers}}:",ScaledSize(6),ScaledSize(186),w)
+		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",ScaledSize(6),ScaledSize(216),w)
 		
-		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",6,250,w)
+		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",ScaledSize(6),ScaledSize(250),w)
 		
-		textarea=CreateTextArea(6,280,ClientWidth(w)-12,ClientHeight(w)-256,w,TEXTAREA_READONLY)
+		textarea=CreateTextArea(ScaledSize(6),ScaledSize(280),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(256),w,TEXTAREA_READONLY)
 		SetGadgetText textarea,"'Sample Code~n~nresult = ((2.0 * 4) + 1)~nPrint( ~qResult: ~q + result )~n"
 		
 		w=toolpanel
-		outputstyle=TGadgetStyle.Create("{{options_tools_label_output}}: ",6,6,w)
-		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",6,66,w)
+		outputstyle=TGadgetStyle.Create("{{options_tools_label_output}}: ",ScaledSize(6),ScaledSize(6),w)
+		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(66),w)
 
 		w=appstubpanel
-		appstublist=CreateListBox(6,6,ClientWidth(w)-12,ClientHeight(w)-80,w)
-		appstubedit=CreateTextField(6,ClientHeight(w)-66,ClientWidth(w)-12,21,w)
-		addappstub=CreateButton("{{options_appstub_btn_add}}",6,ClientHeight(w)-40,140,26,w,BUTTON_PUSH)
-		delappstub=CreateButton("{{options_appstub_btn_del}}",ClientWidth(w)-146,ClientHeight(w)-40,140,26,w,BUTTON_PUSH)
+		appstublist=CreateListBox(ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(80),w)
+		appstubedit=CreateTextField(ScaledSize(6),ClientHeight(w)-ScaledSize(66),ClientWidth(w)-ScaledSize(12),ScaledSize(21),w)
+		addappstub=CreateButton("{{options_appstub_btn_add}}",ScaledSize(6),ClientHeight(w)-ScaledSize(40),ScaledSize(140),ScaledSize(26),w,BUTTON_PUSH)
+		delappstub=CreateButton("{{options_appstub_btn_del}}",ClientWidth(w)-ScaledSize(146),ClientHeight(w)-ScaledSize(40),ScaledSize(140),ScaledSize(26),w,BUTTON_PUSH)
 		appstubs = ["brl.appstub"]
 		AddGadgetItem appstublist,appstubs[0]
 
@@ -1642,9 +1643,9 @@ Type TFindRequester Extends TRequester
 	Function Create:TFindRequester(host:TCodePlay)
 		Local	seek:TFindRequester
 		seek=New TFindRequester
-		seek.initrequester(host,"{{find_window_title}}",280,66,STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL,"{{find_btn_find}}")
-		CreateLabel("{{find_label_find}}:",6,12,82,24,seek.window)
-		seek.findterm=CreateTextField(88,8,ClientWidth(seek.window)-(88+6),21,seek.window)
+		seek.initrequester(host,"{{find_window_title}}",ScaledSize(280),ScaledSize(66),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL,"{{find_btn_find}}")
+		CreateLabel("{{find_label_find}}:",ScaledSize(6),ScaledSize(12),ScaledSize(82),ScaledSize(24),seek.window)
+		seek.findterm=CreateTextField(ScaledSize(88),ScaledSize(8),ClientWidth(seek.window)-ScaledSize(88+6),ScaledSize(21),seek.window)
 		Return seek
 	End Function
 End Type
@@ -1700,20 +1701,20 @@ Type TReplaceRequester Extends TRequester
 		Local x,y
 		Local	seek:TReplaceRequester
 		seek=New TReplaceRequester
-		seek.initrequester(host,"{{replace_window_title}}",380,80,STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,"{{replace_btn_findnext}}")
+		seek.initrequester(host,"{{replace_window_title}}",ScaledSize(380),ScaledSize(80),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,"{{replace_btn_findnext}}")
 		
 		y=11
-		CreateLabel( "{{replace_label_find}}:",6,y+4,88,24,seek.window )
-		seek.findterm=CreateTextField( 96,y,168,21,seek.window )
+		CreateLabel( "{{replace_label_find}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
+		seek.findterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
 		y:+32		
-		CreateLabel( "{{replace_label_replacewith}}:",6,y+4,88,24,seek.window )
-		seek.replaceterm=CreateTextField( 96,y,168,21,seek.window )
+		CreateLabel( "{{replace_label_replacewith}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
+		seek.replaceterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
-		x=ClientWidth(seek.window)-102
+		x=ClientWidth(seek.window)-ScaledSize(102)
 		y=8
-		seek.replaceit=CreateButton("{{replace_btn_replace}}",x,y,96,26,seek.window)
-		seek.replaceall=CreateButton("{{replace_btn_replaceall}}",x,y+32,96,26,seek.window)
+		seek.replaceit=CreateButton("{{replace_btn_replace}}",x,ScaledSize(y),ScaledSize(96),ScaledSize(26),seek.window)
+		seek.replaceall=CreateButton("{{replace_btn_replaceall}}",x,ScaledSize(y+32),ScaledSize(96),ScaledSize(26),seek.window)
 		
 		Return seek
 	End Function
@@ -2439,29 +2440,29 @@ Type TSearchRequester Extends TRequester
 	
 	Function Create:TSearchRequester(host:TCodePlay)
 		Local	search:TSearchRequester = New TSearchRequester
-		search.initrequester(host,"{{search_window_title}}",440,280,STYLE_CANCEL|STYLE_DIVIDER|STYLE_OK|STYLE_STATUS|STYLE_RESIZABLE,strSearchText)
+		search.initrequester(host,"{{search_window_title}}",ScaledSize(440),ScaledSize(280),STYLE_CANCEL|STYLE_DIVIDER|STYLE_OK|STYLE_STATUS|STYLE_RESIZABLE,strSearchText)
 		DisableGadget(search.ok)
 		
-		SetGadgetLayout(CreateLabel("{{search_label_find}}:",6,8+4,95,24,search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
-		search.findbox=CreateTextField(103,8,ClientWidth(search.window)-(103+6),21,search.window);SetGadgetLayout(search.findbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		SetGadgetLayout(CreateLabel("{{search_label_find}}:",ScaledSize(6),ScaledSize(8+4),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
+		search.findbox=CreateTextField(ScaledSize(103),ScaledSize(8),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(21),search.window);SetGadgetLayout(search.findbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		
 		
-		SetGadgetLayout(CreateLabel("{{search_label_filetypes}}:",6,42,95,24,search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
-		search.typebox=CreateComboBox(103,38,ClientWidth(search.window)-(103+6),24,search.window);SetGadgetLayout(search.typebox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		SetGadgetLayout(CreateLabel("{{search_label_filetypes}}:",ScaledSize(6),ScaledSize(42),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
+		search.typebox=CreateComboBox(ScaledSize(103),ScaledSize(38),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(24),search.window);SetGadgetLayout(search.typebox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		
 		AddGadgetItem( search.typebox, "{{search_type_bmaxfiles}}",GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED,-1,"*.bmx" )
 		AddGadgetItem( search.typebox, "{{search_type_codefiles}}",GADGETITEM_LOCALIZED,-1,fileTypes )
 		AddGadgetItem( search.typebox, "{{search_type_allfiles}}",GADGETITEM_LOCALIZED,-1,"*")
 		
-		SetGadgetLayout(CreateLabel("{{search_label_searchpath}}:",6,72,95,48,search.window),1,0,1,0)
-		search.pathbox=CreateTextField(103,68,ClientWidth(search.window)-(103+6+30+6),21,search.window);SetGadgetLayout(search.pathbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
-		search.pathbutton=CreateButton("..",ClientWidth(search.window)-(34+6),65,34,26,search.window);SetGadgetLayout(search.pathbutton,EDGE_CENTERED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		SetGadgetLayout(CreateLabel("{{search_label_searchpath}}:",ScaledSize(6),ScaledSize(72),ScaledSize(95),ScaledSize(48),search.window),1,0,1,0)
+		search.pathbox=CreateTextField(ScaledSize(103),ScaledSize(68),ClientWidth(search.window)-ScaledSize(103+6+30+6),ScaledSize(21),search.window);SetGadgetLayout(search.pathbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		search.pathbutton=CreateButton("..",ClientWidth(search.window)-ScaledSize(34+6),ScaledSize(65),ScaledSize(34),ScaledSize(26),search.window);SetGadgetLayout(search.pathbutton,EDGE_CENTERED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetGadgetText(search.pathbox, CurrentDir())
 		
-		search.pathsubdir=CreateButton("{{search_btn_searchsubfolders}}",103,98,ClientWidth(search.window)-(103+6),20,search.window,BUTTON_CHECKBOX);SetGadgetLayout(search.pathsubdir,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		search.pathsubdir=CreateButton("{{search_btn_searchsubfolders}}",ScaledSize(103),ScaledSize(98),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(20),search.window,BUTTON_CHECKBOX);SetGadgetLayout(search.pathsubdir,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetButtonState(search.pathsubdir,True)
 		
-		search.results=CreateListBox(6,128,ClientWidth(search.window)-12,280-(128+6),search.window);SetGadgetLayout(search.results,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
+		search.results=CreateListBox(ScaledSize(6),ScaledSize(128),ClientWidth(search.window)-ScaledSize(12),ScaledSize(280-(128+6)),search.window);SetGadgetLayout(search.results,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
 		
 		Return search
 	End Function
@@ -2568,17 +2569,17 @@ Type TProjectRequester Extends TRequester
 		Local x,y
 		Local	proj:TProjectRequester = New TProjectRequester
 	
-		proj.initrequester(host,"{{projman_window_title}}",400,168,STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		proj.listbox=CreateListBox( 6,8,244,154,proj.window )
+		proj.initrequester(host,"{{projman_window_title}}",ScaledSize(400),ScaledSize(168),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		proj.listbox=CreateListBox( ScaledSize(6),ScaledSize(8),ScaledSize(244),ScaledSize(154),proj.window )
 		
-		x=ClientWidth(proj.window)-144
-		proj.add=CreateButton("{{projman_btn_addproj}}",x,8,138,26,proj.window)
-		proj.remove=CreateButton("{{projman_btn_delproj}}",x,40,138,26,proj.window)
+		x=ClientWidth(proj.window)-ScaledSize(144)
+		proj.add=CreateButton("{{projman_btn_addproj}}",x,ScaledSize(8),ScaledSize(138),ScaledSize(26),proj.window)
+		proj.remove=CreateButton("{{projman_btn_delproj}}",x,ScaledSize(40),ScaledSize(138),ScaledSize(26),proj.window)
 
-		proj.moveup=CreateButton("{{projman_btn_moveup}}",x,72,138,26,proj.window)
-		proj.movedown=CreateButton("{{projman_btn_movedn}}",x,104,138,26,proj.window)
+		proj.moveup=CreateButton("{{projman_btn_moveup}}",x,ScaledSize(72),ScaledSize(138),ScaledSize(26),proj.window)
+		proj.movedown=CreateButton("{{projman_btn_movedn}}",x,ScaledSize(104),ScaledSize(138),ScaledSize(26),proj.window)
 
-		proj.props=CreateButton("{{projman_btn_properties}}",x,136,138,26,proj.window)
+		proj.props=CreateButton("{{projman_btn_properties}}",x,ScaledSize(136),ScaledSize(138),ScaledSize(26),proj.window)
 
 		DisableGadget proj.remove
 		DisableGadget proj.moveup
@@ -2686,37 +2687,37 @@ EndRem
 	
 	Function Create:TProjectProperties(host:TCodePlay)
 		Local	proj:TProjectProperties = New TProjectProperties
-		proj.initrequester(host,"{{project_window_title}}",480,250,STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		proj.initrequester(host,"{{project_window_title}}",ScaledSize(480),ScaledSize(250),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 		proj.modal = True
 		
-		Local projectdetails:TGadget = CreatePanel(6,8,ClientWidth(proj.window)-12,85,proj.window,PANEL_GROUP,"{{project_group_details}}")
+		Local projectdetails:TGadget = CreatePanel(ScaledSize(6),ScaledSize(8),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(85),proj.window,PANEL_GROUP,"{{project_group_details}}")
 		
 		Local i,n,y
 		y=4
 
-		CreateLabel("{{project_label_name}}:",6,y+4,72,24,projectdetails)
-		proj.localname=CreateTextField(88,y,ClientWidth(projectdetails)-(88+6),21,projectdetails)
+		CreateLabel("{{project_label_name}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
+		proj.localname=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+6),ScaledSize(21),projectdetails)
 '		proj.pathbutton=CreateButton("..",434,y,34,28,projectdetails)
 		y:+30
 
-		CreateLabel("{{project_label_path}}:",8,y+4,72,24,projectdetails)
-		proj.localpath=CreateTextField(88,y,ClientWidth(projectdetails)-(88+34+6+6),21,projectdetails)
-		proj.pathbutton=CreateButton("..",ClientWidth(projectdetails)-(34+6),y-3,34,26,projectdetails)
+		CreateLabel("{{project_label_path}}:",ScaledSize(8),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
+		proj.localpath=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+34+6+6),ScaledSize(21),projectdetails)
+		proj.pathbutton=CreateButton("..",ClientWidth(projectdetails)-ScaledSize(34+6),ScaledSize(y-3),ScaledSize(34),ScaledSize(26),projectdetails)
 		y:+30
 
 
-		Local svnbox:TGadget = CreatePanel(6,101,ClientWidth(proj.window)-12,144,proj.window,PANEL_GROUP,"{{project_group_svn}}")
+		Local svnbox:TGadget = CreatePanel(ScaledSize(6),ScaledSize(101),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(144),proj.window,PANEL_GROUP,"{{project_group_svn}}")
 		y=4
-		CreateLabel("{{project_label_url}}:",8,y+LABELOFFSET,72,24,svnbox)
-		proj.path=CreateTextField(88,y,ClientWidth(svnbox)-92,21,svnbox)
+		CreateLabel("{{project_label_url}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
+		proj.path=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
 		y:+30
-		CreateLabel("{{project_label_username}}:",8,y+LABELOFFSET,72,24,svnbox)
-		proj.user=CreateTextField(88,y,ClientWidth(svnbox)-92,21,svnbox)
+		CreateLabel("{{project_label_username}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
+		proj.user=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
 		y:+30
-		CreateLabel("{{project_label_password}}:",8,y+LABELOFFSET,72,24,svnbox)
-		proj.password=CreateTextField(88,y,ClientWidth(svnbox)-92,21,svnbox,TEXTFIELD_PASSWORD)		
+		CreateLabel("{{project_label_password}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
+		proj.password=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox,TEXTFIELD_PASSWORD)		
 		y:+30
-		proj.checkout=CreateButton("{{project_btn_checkout}}",ClientWidth(svnbox)-154,ClientHeight(svnbox)-32,150,28,svnbox)
+		proj.checkout=CreateButton("{{project_btn_checkout}}",ClientWidth(svnbox)-ScaledSize(154),ClientHeight(svnbox)-ScaledSize(32),ScaledSize(150),ScaledSize(28),svnbox)
 '		proj.update=CreateButton("{{project_btn_update}}",180,y+10,150,28,svnbox)
 '		proj.commit=CreateButton("{{project_btn_commit}}",340,y+10,150,28,svnbox)
 		y:+40
@@ -6370,10 +6371,10 @@ Type TCodePlay
 		
 		CheckVersion()
 		
-		splash=CreateWindow("MaxIDE",200,200,400,160,Null,WINDOW_CLIENTCOORDS|WINDOW_HIDDEN|WINDOW_CENTER)
+		splash=CreateWindow("MaxIDE",ScaledSize(200),ScaledSize(200),ScaledSize(400),ScaledSize(160),Null,WINDOW_CLIENTCOORDS|WINDOW_HIDDEN|WINDOW_CENTER)
 			Local panel:TGadget = CreatePanel(0,0,ClientWidth(splash),ClientHeight(splash),splash,0)
 			SetPanelColor panel,255,255,255;SetPanelPixmap panel, LoadPixmapPNG("incbin::splash.png"), PANELPIXMAP_FIT2
-			Local progress:TGadget = CreateProgBar(2,ClientHeight(panel)-22,ClientWidth(panel)-4,20,panel)
+			Local progress:TGadget = CreateProgBar(ScaledSize(2),ClientHeight(panel)-ScaledSize(22),ClientWidth(panel)-ScaledSize(4),ScaledSize(20),panel)
 			ShowGadget splash;PollSystem
 		
 		window=CreateWindow("MaxIDE",20,20,760,540,Null,WINDOW_TITLEBAR|WINDOW_RESIZABLE|WINDOW_STATUS|WINDOW_HIDDEN|WINDOW_ACCEPTFILES|WINDOW_MENU)
@@ -6397,14 +6398,22 @@ Type TCodePlay
 		UpdateProgBar progress, 0.1;PollSystem
 		ReadConfig()
 
-		toolbar=CreateToolBar("incbin::toolbar.png",0,0,0,0,window )
+		Local tbSize:String
+		Local scale:Int = GadgetScaleFactor(Desktop())
+		If scale = 2 Then
+			tbSize = "_48"
+		Else If scale > 2 Then
+			tbSize = "_64"
+		End If			
+			
+		toolbar=CreateToolBar("incbin::toolbar" + tbSize + ".png",0,0,0,0,window )
 		
 		RemoveGadgetItem toolbar, TB_CONTINUE
 		
-		Rem
-		SetToolbarTips toolbar, ["{{tb_new}}","{{tb_open}}","{{tb_close}}","{{tb_save}}","","{{tb_cut}}","{{tb_copy}}","{{tb_paste}}","{{tb_find}}","",..
+		'Rem
+		SetToolBarTips toolbar, ["{{tb_new}}","{{tb_open}}","{{tb_close}}","{{tb_save}}","","{{tb_cut}}","{{tb_copy}}","{{tb_paste}}","{{tb_find}}","",..
 		                         "{{tb_build}}","{{tb_buildrun}}","{{tb_step}}","{{tb_stepin}}","{{tb_stepout}}","{{tb_stop}}","","{{tb_home}}","{{tb_back}}","{{tb_forward}}"]
-		End Rem
+		'End Rem
 		
 		If Not options.showtoolbar Then HideGadget toolbar
 
@@ -7505,3 +7514,8 @@ Function CacheAndLoadText$(url:Object)
 	TRamStream(url).Close()
 	Return tmpResult
 EndFunction
+
+Function ScaledSize:Int(value:Int)
+	Global cached:Int = GadgetScaleFactor(Desktop())
+	Return value * cached
+End Function
