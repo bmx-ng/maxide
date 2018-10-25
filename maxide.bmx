@@ -774,7 +774,7 @@ Type TAboutRequester Extends TRequester
 
 		Next
 
-		abt.hypBlitz = CreateHyperlink("http://www.blitzbasic.com/",ScaledSize(6),(h-ScaledSize(28)),ScaledSize(200),ScaledSize(26),win,LABEL_LEFT)
+		abt.hypBlitz = CreateHyperlink("https://blitzmax.org",ScaledSize(6),(h-ScaledSize(28)),ScaledSize(200),ScaledSize(26),win,LABEL_LEFT)
 		SetGadgetLayout abt.hypBlitz, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED, EDGE_ALIGNED
 
 		Return abt
