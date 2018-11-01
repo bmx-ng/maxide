@@ -1,27 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px"
-	 height="16px" viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
-<style type="text/css">
-	.icon-canvas-transparent{opacity:0;fill:#F6F6F6;}
-	.icon-vs-out{fill:#F6F6F6;}
-	.icon-vs-bg{fill:#424242;}
-	.icon-vs-action-blue{fill:#00539C;}
-</style>
-<g id="canvas">
-	<path class="icon-canvas-transparent" d="M16,16H0V0h16V16z"/>
-</g>
-<g id="outline">
-	<path class="icon-vs-out" d="M8,16c-1.654,0-3-1.346-3-3s1.346-3,3-3s3,1.346,3,3S9.654,16,8,16z M15,10V4.586l-4-4
-		V3.03C9.967,2.367,8.755,2,7.5,2C4.158,2,1.305,4.596,1.004,7.91L0.905,9h3.643l0.113-0.872c0.103-0.791,0.527-1.474,1.13-1.923
-		L9.586,10H15z M6.106,6C6.521,5.768,6.998,5.637,7.5,5.637C8.011,5.637,8.519,5.77,8.966,6H6.106z"/>
-</g>
-<g id="iconBg">
-	<path class="icon-vs-bg" d="M8,11c1.104,0,2,0.896,2,2c0,1.104-0.896,2-2,2s-2-0.896-2-2C6,11.896,6.896,11,8,11z"/>
-</g>
-<g id="colorAction">
-	<path class="icon-vs-action-blue" d="M3.669,8H2c0.254-2.799,2.637-5,5.5-5c1.86,0,3.504,0.931,4.5,2.348V3l2,2
-		v4h-4L8,7h3c0,0,0-0.001,0-0.002L11.238,7C10.652,5.611,9.102,4.637,7.5,4.637C5.535,4.637,3.915,6.102,3.669,8z"/>
-</g>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" width="16" height="16" xml:space="preserve">
+  <path d="M8 16c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3-1.346 3-3 3zm7-6V4.586l-4-4V3.03A6.481 6.481 0 0 0 7.5 2C4.158 2 1.305 4.596 1.004 7.91L.905 9h3.643l.113-.872a2.857 2.857 0 0 1 1.13-1.923L9.586 10H15zM6.106 6A2.852 2.852 0 0 1 7.5 5.637 3.23 3.23 0 0 1 8.966 6h-2.86z" fill="#F6F6F6"/>
+  <path d="M8 11a2 2 0 1 1-.001 4.001A2 2 0 0 1 8 11z" fill="#424242"/>
+  <path d="M3.669 8H2c.254-2.799 2.637-5 5.5-5 1.86 0 3.504.931 4.5 2.348V3l2 2v4h-4L8 7h3v-.002l.238.002C10.652 5.611 9.102 4.637 7.5 4.637A3.863 3.863 0 0 0 3.669 8z" fill="#00539C"/>
 </svg>
