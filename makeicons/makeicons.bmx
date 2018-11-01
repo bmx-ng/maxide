@@ -4,7 +4,7 @@ SuperStrict
 Framework brl.glmax2d
 Import brl.pngloader
 
-Local sizes:Int[] = [24, 48, 64]
+Local sizes:Int[] = [16, 24, 48, 64]
 Local pixmaps:TPixmap[] = New TPixmap[sizes.length]
 
 For Local i:Int = 0 Until sizes.length
@@ -40,12 +40,12 @@ Function BuildIcons:TPixmap(sz:Int)
 	Local n:Int = actions.length
 
 	Local p:TPixmap
-	
+
 	Local xOffset:Int = 0
-	
+
 	For Local i:Int = 0 Until actions.length
 		Local t$ = actions[i]
-		
+
 		If t<>" "
 			Local q:TPixmap=LoadPixmap( sz + "/" + t+".png" )
 			If Not p
@@ -66,15 +66,15 @@ Function BuildIcons:TPixmap(sz:Int)
 		EndIf
 		xOffset:+sz
 	Next
-	
+
 	Return p
 End Function
 
 Function GetActions:String[]()
-	Return [ "New","Open","Close","Save"," ", ..
-		 "Cut","Copy","Paste","Find"," ", ..
-		 "Build","Build-Run","Step","Step-In","Step-Out","Stop"," ", ..
-		 "Home","Back","Forward", ..
+	Return [ "NewFile","OpenFile","CloseDocument","Save"," ", ..
+		 "Cut","Copy","Paste","Search"," ", ..
+		 "Build","Build-Run","StepOver","StepIn","StepOut","Stop"," ", ..
+		 "Home","StepBackwards","StepForward", ..
 		 "Go" ..
 		]
 End Function
