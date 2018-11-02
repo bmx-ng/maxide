@@ -79,9 +79,7 @@ Extern
 End Extern
 
 If Not _bbusew
-	Notify..
-	"This program is not compatible with Windows 95/98/ME.~n~n"+..
-	"Please visit www.blitzbasic.com to download a compatible version.",True
+	Notify ("This program is not compatible with Windows 95/98/ME.~n~n", True)
 	End
 EndIf
 ?
@@ -6377,6 +6375,33 @@ Type TCodePlay
 		End If
 
 		toolbar=CreateToolBar("incbin::toolbar" + tbSize + ".png",0,0,0,0,window )
+		?win32
+			'create some better looking grayscale icons for disabled icons (original ones have some
+			'blackish outline when using default windows algorithm)
+			TWindowsToolbar(toolbar).CreateAndSetDisabledIconStrip(LoadPixmap("incbin::toolbar" + tbSize + ".png"), 0.1, 0.4)
+		?
+		Rem
+		?win32
+			Local disabledPixmap:TPixmap = LoadPixmap("incbin::toolbar.png")
+			For Local x:Int = 0 Until disabledPixmap.width
+				For Local y:Int = 0 Until disabledPixmap.height
+					Local c:Int = disabledPixmap.ReadPixel(x,y)
+					Local a:Int = (c Shr 24) & $ff
+					Local r:Int = (c Shr 16) & $ff
+					Local g:Int = (c Shr 8) & $ff
+					Local b:Int = c & $ff
+					'convert to grayscale
+					Local luminance:Float = Sqr(0.299 * r*r + 0.587 * g*g + 0.114 * b*b)
+					r = Min(255, Max(0, luminance + (r - luminance) * 0.1))
+					g = Min(255, Max(0, luminance + (g - luminance) * 0.1))
+					b = Min(255, Max(0, luminance + (b - luminance) * 0.1))
+					disabledPixmap.WritePixel(x,y, Int(a*0.4) * $1000000 + r * $10000 + g * $100 + b)
+				Next
+			Next
+			TWindowsToolbar(toolbar).SetDisabledIconstrip( LoadIconStrip(disabledPixmap) )
+		?
+		EndRem
+
 
 		RemoveGadgetItem toolbar, TB_CONTINUE
 
