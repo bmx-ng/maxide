@@ -4,7 +4,7 @@ SuperStrict
 Framework brl.glmax2d
 Import brl.pngloader
 
-Local sizes:Int[] = [16, 24, 48, 64]
+Local sizes:Int[] = [24, 48, 64]
 Local pixmaps:TPixmap[] = New TPixmap[sizes.length]
 
 For Local i:Int = 0 Until sizes.length

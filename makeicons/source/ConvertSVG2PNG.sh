@@ -1,5 +1,5 @@
 #!/bin/bash
-for size in 16 24 48 64
+for size in 24 48 64
 	do
 		mkdir -p "$PWD/../$size"
 		for file in $PWD/*.svg
