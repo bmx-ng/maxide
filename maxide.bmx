@@ -30,10 +30,11 @@ Framework brl.standardio
 Import MaxGUI.CocoaMaxGui
 ?win32
 Import MaxGUI.Win32MaxGUIEx
+'Import MaxGUI.maxguitextareascintilla
 ?linux
-Import gtk.gtk3maxgui
-Import gtk.gtk3webkitgtk
-Import gtk.maxguitextareascintilla
+Import MaxGUI.gtk3maxgui
+Import MaxGUI.gtk3webkitgtk
+Import MaxGUI.maxguitextareascintilla
 ?
 Import MaxGUI.ProxyGadgets
 
@@ -4051,6 +4052,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		SetGadgetLayout output,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 		SetGadgetFilter output,outputfilter,Self
 		SetGadgetText output," "	'simon was here
+		TextAreaEnableUndoRedo(output, False)
 		host.options.outputstyle.apply output
 	End Method
 
@@ -4161,7 +4163,7 @@ Type TOpenCode Extends TToolPanel
 	Field tidyqueue1 = -1, tidyqueue2 = -1
 	Field	editmenu:TGadget
 	Field	codenode:TCodeNode
-	Field	dirtynode,uc
+	Field	dirtynode,uc,nativeundo
 
 	Function RefreshHighlightingMsg()
 		msgHighlightingStatus = LocalizeString("{{msg_highlightingcode}}")
@@ -4412,10 +4414,12 @@ Type TOpenCode Extends TToolPanel
 		Local src$ = TextAreaText(textarea)
 		Local d:TDiff = CalcDiff(src)
 		If d
-			If makeundo And d.textchange
-				undolist.AddLast d
-				redolist.Clear
-			EndIf
+			If Not nativeundo Then
+				If makeundo And d.textchange
+					undolist.AddLast d
+					redolist.Clear
+				EndIf
+			End If
 			SetCode src,d
 			If d.textchange Then dirtynode=True
 		EndIf
@@ -4423,25 +4427,41 @@ Type TOpenCode Extends TToolPanel
 	End Method
 
 	Method Undo()
-		Local	d:TDiff
-		If undolist.IsEmpty() Return
-		d=TDiff(undolist.RemoveLast())
-		redolist.AddLast d
-		SetTextAreaText textarea,d.del,d.pos1,d.add.length
-		SelectTextAreaText(textarea,d.pos,d.count)
-		SetCode TextAreaText(textarea),d
-		UpdateCursor
+		If nativeundo Then
+			TextAreaUndo(textarea)
+			Local src$ = TextAreaText(textarea)
+			Local d:TDiff = CalcDiff(src)
+			SetCode TextAreaText(textarea),d
+			UpdateCursor
+		Else
+			Local	d:TDiff
+			If undolist.IsEmpty() Return
+			d=TDiff(undolist.RemoveLast())
+			redolist.AddLast d
+			SetTextAreaText textarea,d.del,d.pos1,d.add.length
+			SelectTextAreaText(textarea,d.pos,d.count)
+			SetCode TextAreaText(textarea),d
+			UpdateCursor
+		End If
 	End Method
 
 	Method Redo()
 		Local	d:TDiff
-		If redolist.IsEmpty() Return
-		d=TDiff(redolist.RemoveLast())
-		undolist.AddLast d
-		SetTextAreaText textarea,d.add,d.pos,d.del.length
-		SelectTextAreaText(textarea,d.pos0,d.count0)
-		UpdateCursor
-		SetCode TextAreaText(textarea),d
+		If nativeundo Then
+			TextAreaRedo(textarea)
+			Local src$ = TextAreaText(textarea)
+			Local d:TDiff = CalcDiff(src)
+			SetCode TextAreaText(textarea),d
+			UpdateCursor
+		Else
+			If redolist.IsEmpty() Return
+			d=TDiff(redolist.RemoveLast())
+			undolist.AddLast d
+			SetTextAreaText textarea,d.add,d.pos,d.del.length
+			SelectTextAreaText(textarea,d.pos0,d.count0)
+			UpdateCursor
+			SetCode TextAreaText(textarea),d
+		End If
 	End Method
 
 	Method RefreshStyle()
@@ -4671,6 +4691,7 @@ Type TOpenCode Extends TToolPanel
 		If same Then lsrc = cleansrcl Else lsrc=src.ToLower()
 		cpos=TextAreaCursor(textarea,TEXTAREA_CHARS)
 		LockTextArea textarea
+		TextAreaEnableUndoRedo(textarea, False)
 		style=host.options.styles
 ' calculate highlight region
 
@@ -4857,6 +4878,7 @@ Type TOpenCode Extends TToolPanel
 			p:+1
 		Wend
 		BracketMatching(lsrc,startp,p1,True)
+		TextAreaEnableUndoRedo(textarea, True)
 		UnlockTextArea textarea
 		If Not same
 			cleansrc=src
@@ -5435,6 +5457,7 @@ Type TOpenCode Extends TToolPanel
 		SetTextAreaText code.textarea,"~n"
 		SetGadgetLayout code.textarea,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
 		code.RefreshStyle()
+		code.nativeundo = TextAreaHasUndoRedo(code.textarea)
 
 		If isnew
 			code.SaveSource path
@@ -5453,6 +5476,7 @@ Type TOpenCode Extends TToolPanel
 		If ExtractExt(path).toLower()="htm" code.ishtml=True
 		code.UpdateCode False
 		code.filesrc=TextAreaText(code.textarea)
+		TextAreaClearUndoRedo(code.textarea)
 		Return code
 	End Function
 
