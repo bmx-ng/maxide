@@ -55,6 +55,7 @@ Import brl.timer
 Import brl.timerdefault
 ?
 Import brl.maxutil
+Import brl.stringbuilder
 
 Incbin "bmxlogo.png"
 Incbin "toolbar.png"
@@ -282,6 +283,7 @@ End Type
 
 Type TQuickHelp
 	Field map:TMap=New TMap	'key=lower(token) value=token:TToken
+	Field tokens:String
 
 	Method AddCommand:TQuickHelp(t$,l$,a$)
 		map.Insert t.ToLower(),New TToken.Create(t$,l$,a$)
@@ -314,6 +316,7 @@ Type TQuickHelp
 		EndTry
 		If Not Text Return Null
 		qh=New TQuickHelp
+		Local sb:TStringBuilder = New TStringBuilder
 		For Local l$ = EachIn Text.Split("~n")
 			For i=0 Until l.length
 				c=l[i]
@@ -332,7 +335,12 @@ Type TQuickHelp
 				anchor=l[q+1..]
 			EndIf
 			qh.AddCommand token,help,anchor
+			If sb.Length() > 0 Then
+				sb.Append(" ")
+			End If
+			sb.Append(token)
 		Next
+		qh.tokens = sb.ToString().ToLower()
 		Return qh
 	End Function
 End Type
@@ -4469,16 +4477,37 @@ Type TOpenCode Extends TToolPanel
 		Local	src$
 		Local charwidth
 		charwidth=host.options.editfont.CharWidth(32)
+
+		If TextAreaHasHighlighting(textarea) Then
+			Local back:TColor = host.options.editcolor
+			Local fore:TColor = host.options.styles[0].color
+			TextAreaClearHighlightStyles(textarea, back.red, back.green, back.blue, fore.red, fore.green, fore.blue)
+		End If
+
 		SetTextAreaTabs textarea,host.options.tabsize*charwidth
 		SetMargins textarea,4
 		SetTextAreaFont textarea,host.options.editfont
-		rgb=host.options.editcolor
-		SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,True
-		rgb=host.options.styles[0].color
-		SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,False
+
+		If Not TextAreaHasHighlighting(textarea) Then
+			rgb=host.options.editcolor
+			SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,True
+			rgb=host.options.styles[0].color
+			SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,False
+		Else
+			For Local i:Int = 0 Until 5
+				Local style:TTextStyle = host.options.styles[i]
+				TextAreaSetHighlightStyle(textarea, i, style.flags, style.color.red, style.color.green, style.color.blue)
+			Next
+		End If
+
+		If TextAreaHasLineNumbers(textarea) Then
+			TextAreaSetLineNumberForeColor(textarea, 0, 0, 0)
+		End If
+
 		SetTextAreaCaretWidth textarea,host.options.caretstyle.width
 		rgb=host.options.caretstyle.color
 		SetTextAreaCaretColor textarea,rgb.red,rgb.green,rgb.blue
+
 		src=cleansrc
 		cleansrc=""
 		cleansrcl=""
@@ -4679,7 +4708,7 @@ Type TOpenCode Extends TToolPanel
 		CheckDirty src
 		same = Not ((diff) Or (src<>cleansrc))
 		If same And Not (diff Or HasTidyQueue()) Then Return
-		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight
+		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight Or TextAreaHasHighlighting(textarea)
 			If Not same Then
 				cleansrc=src
 				cleansrcl=src.ToLower()
@@ -5426,6 +5455,42 @@ Type TOpenCode Extends TToolPanel
 		host.SetTitle path
 	End Method
 
+	Method SetLanguage(path:String)
+		If TextAreaHasHighlighting(textarea) Then
+			Local lang:String
+			Local keywords:String
+			Select ExtractExt(path).ToLower()
+				Case "bmx"
+					lang = "blitzmax"
+					If host.quickhelp Then
+						keywords = host.quickhelp.tokens
+					End If
+				Case "bmk","lua"
+					lang = "lua"
+					keywords = "and break do else elseif end false for function if in local nil not or repeat return then true until while"
+				Case "c"
+					lang = "cpp"
+					keywords = KEYWORDS_C
+				Case "cc","cpp","cxx","cs","h","hh","hpp","hxx"
+					lang = "cpp"
+					keywords = KEYWORDS_CPP
+				Case "mm", "m"
+					lang = "cpp"
+					keywords = KEYWORDS_OBJC
+				Case "htm","html","shtml","htt","cfm","tpl","hta"
+					lang = "html"
+				Case "xml","gcl","xsl","svg","xul","xsd","dtd","xslt","axl"
+					lang = "xml"
+			End Select
+			If lang Then
+				TextAreaSetHighlightLanguage(textarea, lang)
+			End If
+			If keywords Then
+				TextAreaSetHighlightKeywords(textarea, 0, keywords)
+			End If
+		End If
+	End Method
+
 	Function Create:TOpenCode(path$,host:TCodePlay)
 		Local	code:TOpenCode
 		Local	stream:TStream
@@ -5456,6 +5521,7 @@ Type TOpenCode Extends TToolPanel
 		SetGadgetFilter code.textarea,code.FilterKey,code
 		SetTextAreaText code.textarea,"~n"
 		SetGadgetLayout code.textarea,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED
+		code.SetLanguage(path)
 		code.RefreshStyle()
 		code.nativeundo = TextAreaHasUndoRedo(code.textarea)
 
@@ -5472,14 +5538,32 @@ Type TOpenCode Extends TToolPanel
 		If ExtractExt(path).toLower()="c" code.isc=True
 		If ExtractExt(path).toLower()="cpp" code.iscpp=True
 		If ExtractExt(path).toLower()="cxx" code.iscpp=True
+		If ExtractExt(path).toLower()="h" code.iscpp=True
 		If ExtractExt(path).toLower()="html" code.ishtml=True
 		If ExtractExt(path).toLower()="htm" code.ishtml=True
 		code.UpdateCode False
 		code.filesrc=TextAreaText(code.textarea)
 		TextAreaClearUndoRedo(code.textarea)
+		If TextAreaHasHighlighting(code.textarea) Then
+			TextAreaHighlight(code.textarea)
+		End If
 		Return code
 	End Function
 
+	Const KEYWORDS_C:String = "auto break case char const continue default do double else enum extern float for goto if int long " + ..
+		"register return short signed sizeof static struct switch typedef union unsigned void volatile while"
+
+	Const KEYWORDS_CPP:String = "alignas alignof and and_eq asm atomic_cancel atomic_commit atomic_noexcept auto bitand bitor bool break case catch " + ..
+		"char char8_t char16_t char32_t class compl concept const consteval constexpr const_cast continue co_await co_return " + ..
+		"co_yield decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto if " + ..
+		"import inline int long module mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected " + ..
+		"public reflexpr register reinterpret_cast requires return short signed sizeof static static_assert static_cast struct " + ..
+		"switch synchronized template this thread_local throw true try typedef typeid typename union unsigned using(1) virtual void volatile wchar_t while xor xor_eq"
+
+	Const KEYWORDS_OBJC:String = "auto else long switch break enum register typedef case extern return union char float short " + ..
+		"unsigned const for signed void continue goto sizeof volatile default if static while do int " + ..
+		"struct _Packed double protocol interface implementation NSObject NSInteger NSNumber CGFloat " + ..
+		"property nonatomic retain strong weak unsafe_unretained readwrite readonly"
 End Type
 
 Type TRect
