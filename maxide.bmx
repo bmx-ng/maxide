@@ -5098,6 +5098,13 @@ Type TOpenCode Extends TToolPanel
 			Return 0
 		EndIf
 
+		'
+		' the scintilla textarea uses KEYCHAR events to update its contents.
+		' so we need to also suppress those for our autoindent funcitonality.
+		If id=EVENT_KEYCHAR And key=KEY_ENTER And this And this.host.options.autoindent And TextAreaHasCharEventSupressionFixup(this.textarea) Then
+			Return 0
+		End If
+
 		Return 1
 	End Function
 
