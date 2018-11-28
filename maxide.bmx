@@ -70,7 +70,7 @@ Const DEFAULT_LANGUAGEPATH$ = "incbin::default.language.ini"
 Incbin "window_icon.png"
 ?
 
-Const IDE_VERSION$="1.44 beta [ng]"
+Const IDE_VERSION$="1.50 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = "MaxIDE "+IDE_VERSION
@@ -4708,13 +4708,14 @@ Type TOpenCode Extends TToolPanel
 		CheckDirty src
 		same = Not ((diff) Or (src<>cleansrc))
 		If same And Not (diff Or HasTidyQueue()) Then Return
-		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight Or TextAreaHasHighlighting(textarea)
+		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight
 			If Not same Then
 				cleansrc=src
 				cleansrcl=src.ToLower()
 			EndIf
 			Return
 		EndIf
+		Local shouldHighlight:Int = Not TextAreaHasHighlighting(textarea)
 ' doit
 		autocap=host.options.autocapitalize
 		If same Then lsrc = cleansrcl Else lsrc=src.ToLower()
@@ -4776,7 +4777,7 @@ Type TOpenCode Extends TToolPanel
 			r1=FindEndRem(lsrc,r0,True)
 			If r1>p
 				s=style[COMMENT]
-				If r1>p s.Format(textarea,p,r1-p)
+				If shouldHighlight And r1>p s.Format(textarea,p,r1-p)
 				If autocap And r1<src.length
 					If lsrc[r1-6..r1]="endrem" And src[r1-6..r1]<>"EndRem" SetTextAreaText textarea,"EndRem",r1-6,6
 					If lsrc[r1-7..r1]="end rem" And src[r1-7..r1]<>"End Rem" SetTextAreaText textarea,"End Rem",r1-7,7
@@ -4795,7 +4796,7 @@ Type TOpenCode Extends TToolPanel
 		ClearTidyQueue(p,p1)
 
 		s=style[NORMAL]
-		If p1>p s.format(textarea,p,p1-p)
+		If shouldHighlight And p1>p s.format(textarea,p,p1-p)
 		startp = p
 
 		While p<p1
@@ -4809,7 +4810,7 @@ Type TOpenCode Extends TToolPanel
 				r=src.Find(EOL,p+1)
 				If r>-1 And r<q q=r
 				s=style[QUOTED]
-				s.format(textarea,p,q-p)
+				If shouldHighlight s.format(textarea,p,q-p)
 				p=q
 				Continue
 			EndIf
@@ -4819,7 +4820,7 @@ Type TOpenCode Extends TToolPanel
 				r=src.Find(EOL,p+1)
 				If r>-1 And r<q q=r
 				s=style[COMMENT]
-				s.format(textarea,p,q-p)
+				If shouldHighlight s.format(textarea,p,q-p)
 				p=q
 				Continue
 			EndIf
@@ -4854,7 +4855,7 @@ Type TOpenCode Extends TToolPanel
 							deferpos=q
 						EndIf
 					EndIf
-					s.format(textarea,p,q-p)
+					If shouldHighlight s.format(textarea,p,q-p)
 				EndIf
 				p=q
 				Continue
@@ -4896,7 +4897,7 @@ Type TOpenCode Extends TToolPanel
 					q:-1
 					Exit
 				Wend
-				If valid And dots < 2 Then style[NUMBER].format(textarea,p,(q-p))
+				If shouldHighlight And valid And dots < 2 Then style[NUMBER].format(textarea,p,(q-p))
 				'Fix for slicing '..' syntax
 				If q<src.length And (src[q]=Asc(".")) Then q:+1
 				If q<src.length And (src[q]=Asc(".")) Then q:+1
@@ -4906,7 +4907,7 @@ Type TOpenCode Extends TToolPanel
 			EndIf
 			p:+1
 		Wend
-		BracketMatching(lsrc,startp,p1,True)
+		If shouldHighlight BracketMatching(lsrc,startp,p1,True)
 		TextAreaEnableUndoRedo(textarea, True)
 		UnlockTextArea textarea
 		If Not same
