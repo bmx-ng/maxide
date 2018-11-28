@@ -4494,10 +4494,12 @@ Type TOpenCode Extends TToolPanel
 			rgb=host.options.styles[0].color
 			SetTextAreaColor textarea,rgb.red,rgb.green,rgb.blue,False
 		Else
-			For Local i:Int = 0 Until 5
-				Local style:TTextStyle = host.options.styles[i]
-				TextAreaSetHighlightStyle(textarea, i, style.flags, style.color.red, style.color.green, style.color.blue)
-			Next
+			If host.options.syntaxhighlight
+				For Local i:Int = 0 Until 5
+					Local style:TTextStyle = host.options.styles[i]
+					TextAreaSetHighlightStyle(textarea, i, style.flags, style.color.red, style.color.green, style.color.blue)
+				Next
+			End If
 		End If
 
 		If TextAreaHasLineNumbers(textarea) Then
@@ -4708,16 +4710,16 @@ Type TOpenCode Extends TToolPanel
 		CheckDirty src
 		same = Not ((diff) Or (src<>cleansrc))
 		If same And Not (diff Or HasTidyQueue()) Then Return
-		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight
+		autocap=host.options.autocapitalize
+		Local shouldHighlight:Int = Not TextAreaHasHighlighting(textarea)
+		If Not isbmx Or Not host.quickhelp Or Not host.options.syntaxhighlight Or (Not autocap And Not shouldHighlight)
 			If Not same Then
 				cleansrc=src
 				cleansrcl=src.ToLower()
 			EndIf
 			Return
 		EndIf
-		Local shouldHighlight:Int = Not TextAreaHasHighlighting(textarea)
 ' doit
-		autocap=host.options.autocapitalize
 		If same Then lsrc = cleansrcl Else lsrc=src.ToLower()
 		cpos=TextAreaCursor(textarea,TEXTAREA_CHARS)
 		LockTextArea textarea
@@ -5457,7 +5459,7 @@ Type TOpenCode Extends TToolPanel
 	End Method
 
 	Method SetLanguage(path:String)
-		If TextAreaHasHighlighting(textarea) Then
+		If host.options.syntaxhighlight And TextAreaHasHighlighting(textarea) Then
 			Local lang:String
 			Local keywords:String
 			Select ExtractExt(path).ToLower()
@@ -5545,7 +5547,7 @@ Type TOpenCode Extends TToolPanel
 		code.UpdateCode False
 		code.filesrc=TextAreaText(code.textarea)
 		TextAreaClearUndoRedo(code.textarea)
-		If TextAreaHasHighlighting(code.textarea) Then
+		If host.options.syntaxhighlight And TextAreaHasHighlighting(code.textarea) Then
 			TextAreaHighlight(code.textarea)
 		End If
 		Return code
