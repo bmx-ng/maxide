@@ -5468,25 +5468,27 @@ Type TOpenCode Extends TToolPanel
 	Method SetLanguage(path:String)
 		If host.options.syntaxhighlight And TextAreaHasHighlighting(textarea) Then
 			Local lang:String
-			Local keywords:String
+			Local keywords:String[] = New String[6]
 			Select ExtractExt(path).ToLower()
 				Case "bmx"
 					lang = "blitzmax"
 					If host.quickhelp Then
-						keywords = host.quickhelp.tokens
+						keywords[0] = host.quickhelp.tokens
 					End If
 				Case "bmk","lua"
 					lang = "lua"
-					keywords = "and break do else elseif end false for function if in local nil not or repeat return then true until while"
+					keywords[0] = KEYWORDS_LUA
 				Case "c"
 					lang = "cpp"
-					keywords = KEYWORDS_C
+					keywords[0] = KEYWORDS_C
+					keywords[4] = KEYWORDS_CPP_PP
 				Case "cc","cpp","cxx","cs","h","hh","hpp","hxx"
 					lang = "cpp"
-					keywords = KEYWORDS_CPP
+					keywords[0] = KEYWORDS_CPP
+					keywords[4] = KEYWORDS_CPP_PP
 				Case "mm", "m"
 					lang = "cpp"
-					keywords = KEYWORDS_OBJC
+					keywords[0] = KEYWORDS_OBJC
 				Case "htm","html","shtml","htt","cfm","tpl","hta"
 					lang = "html"
 				Case "xml","gcl","xsl","svg","xul","xsd","dtd","xslt","axl"
@@ -5495,9 +5497,11 @@ Type TOpenCode Extends TToolPanel
 			If lang Then
 				TextAreaSetHighlightLanguage(textarea, lang)
 			End If
-			If keywords Then
-				TextAreaSetHighlightKeywords(textarea, 0, keywords)
-			End If
+			For Local i:Int = 0 Until keywords.length
+				If keywords[i] Then
+					TextAreaSetHighlightKeywords(textarea, i, keywords[i])
+				End If
+			Next
 		End If
 	End Method
 
@@ -5570,10 +5574,14 @@ Type TOpenCode Extends TToolPanel
 		"public reflexpr register reinterpret_cast requires return short signed sizeof static static_assert static_cast struct " + ..
 		"switch synchronized template this thread_local throw true try typedef typeid typename union unsigned using(1) virtual void volatile wchar_t while xor xor_eq"
 
+	Const KEYWORDS_CPP_PP:String = "#include #define #undef #if #ifdef #ifndef #error __FILE__ __LINE__ __DATE__ __TIME__ __TIMESTAMP__ pragma"
+	
 	Const KEYWORDS_OBJC:String = "auto else long switch break enum register typedef case extern return union char float short " + ..
 		"unsigned const for signed void continue goto sizeof volatile default if static while do int " + ..
 		"struct _Packed double protocol interface implementation NSObject NSInteger NSNumber CGFloat " + ..
 		"property nonatomic retain strong weak unsafe_unretained readwrite readonly"
+	
+	Const KEYWORDS_LUA:String = "and break do else elseif end false for function if in local nil not or repeat return then true until while"
 End Type
 
 Type TRect
