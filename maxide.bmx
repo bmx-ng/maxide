@@ -416,7 +416,7 @@ Type TRequester
 
 		If (flags & STYLE_OK) Then
 
-			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
+			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(111),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
 			SetGadgetLayout(ok,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 
 			If (flags & STYLE_CANCEL) Then
@@ -426,7 +426,7 @@ Type TRequester
 
 		Else
 			If (flags & STYLE_CANCEL) Then
-				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(101),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
+				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(111),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 		EndIf
@@ -981,10 +981,10 @@ Type TTextStyle
 		s=New TTextStyle
 		s.color=New TColor
 		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
-		s.panel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.panel=CreatePanel(xpos+ScaledSize(114),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
-		s.combo=CreateComboBox(xpos+ScaledSize(122),ypos,ScaledSize(96),ScaledSize(24),window)
-		s.underline=CreateButton("{{txtstyle_underline}}",xpos+ScaledSize(226),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+		s.combo=CreateComboBox(xpos+ScaledSize(142),ypos,ScaledSize(96),ScaledSize(24),window)
+		s.underline=CreateButton("{{txtstyle_underline}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 		AddGadgetItem s.combo,"{{txtstyle_normal}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_bold}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_italic}}",GADGETITEM_LOCALIZED
@@ -1044,9 +1044,9 @@ Type TCaretStyle
 		s=New TCaretStyle
 		s.color=New TColor
 		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
-		s.panel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.panel=CreatePanel(xpos+ScaledSize(114),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
-		s.combo=CreateComboBox(xpos+ScaledSize(122),ypos,ScaledSize(96),ScaledSize(24),window)
+		s.combo=CreateComboBox(xpos+ScaledSize(142),ypos,ScaledSize(96),ScaledSize(24),window)
 		AddGadgetItem s.combo,"{{caretstyle_width_1}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_2}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_3}}",GADGETITEM_LOCALIZED
@@ -1117,11 +1117,11 @@ Type TLineNumberStyle
 		s.fg=New TColor
 		s.bg=New TColor
 		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
-		s.fgPanel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.fgPanel=CreatePanel(xpos+ScaledSize(114),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.fgPanel,255,255,0
-		s.bgPanel=CreatePanel(xpos+ScaledSize(122),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.bgPanel=CreatePanel(xpos+ScaledSize(142),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.bgPanel,255,255,0
-		s.enabled=CreateButton("{{linenumberstyle_enabled}}",xpos+ScaledSize(226),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+		s.enabled=CreateButton("{{linenumberstyle_enabled}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 
 		Return s
 	End Function
@@ -1232,10 +1232,10 @@ Type TGadgetStyle
 		s.fg=New TColor
 		s.bg=New TColor
 		s.label=CreateLabel(name,xpos,ypos+ScaledSize(LABELOFFSET),ScaledSize(66),ScaledSize(50),window)
-		s.fpanel=CreatePanel(xpos+ScaledSize(68),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
-		s.bpanel=CreatePanel(xpos+ScaledSize(96),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
-		s.fbutton=CreateButton("..",xpos+ScaledSize(122),ypos+ScaledSize(30),ClientWidth(window)-(xpos+ScaledSize(128)),ScaledSize(24),window)
-		s.fcombo=CreateComboBox(xpos+ScaledSize(122),ypos,ClientWidth(window)-(xpos+ScaledSize(128)),ScaledSize(24),window)
+		s.fpanel=CreatePanel(xpos+ScaledSize(88),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.bpanel=CreatePanel(xpos+ScaledSize(116),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.fbutton=CreateButton("..",xpos+ScaledSize(142),ypos+ScaledSize(30),ClientWidth(window)-(xpos+ScaledSize(148)),ScaledSize(24),window)
+		s.fcombo=CreateComboBox(xpos+ScaledSize(142),ypos,ClientWidth(window)-(xpos+ScaledSize(148)),ScaledSize(24),window)
 		AddGadgetItem s.fcombo, "{{options_font_desc_user}}", GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED
 		AddGadgetItem s.fcombo, "{{options_font_desc_guidefault}}", GADGETITEM_LOCALIZED
 		AddGadgetItem s.fcombo, "{{options_font_desc_monospaced}}", GADGETITEM_LOCALIZED
@@ -1607,7 +1607,7 @@ Type TOptionsRequester Extends TPanelRequester
 
 	Method InitOptionsRequester(host:TCodePlay)
 		Local	w:TGadget
-		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(380), ScaledSize(490))
+		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(420), ScaledSize(530))
 ' init values
 		editcolor=New TColor
 ' init gadgets
@@ -1638,36 +1638,36 @@ Type TOptionsRequester Extends TPanelRequester
 
 		w=editorpanel
 		CreateLabel("{{options_editor_label_background}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(90),ScaledSize(24),w)
-		editpanel=CreatePanel(ScaledSize(100),ScaledSize(6),ScaledSize(24),ScaledSize(24),w,PANEL_BORDER|PANEL_ACTIVE)
-		editbutton=CreateButton("..",ScaledSize(128),ScaledSize(6),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
+		editpanel=CreatePanel(ScaledSize(120),ScaledSize(6),ScaledSize(24),ScaledSize(24),w,PANEL_BORDER|PANEL_ACTIVE)
+		editbutton=CreateButton("..",ScaledSize(148),ScaledSize(6),ClientWidth(w)-ScaledSize(154),ScaledSize(24),w)
 
-		tabbutton=CreateComboBox(ScaledSize(128),ScaledSize(36),ClientWidth(w)-ScaledSize(134),ScaledSize(24),w)
+		tabbutton=CreateComboBox(ScaledSize(148),ScaledSize(36),ClientWidth(w)-ScaledSize(154),ScaledSize(24),w)
 		For Local i=1 To 8
 			AddGadgetItem tabbutton,"{{options_editor_itemlabel_tabsize}} "+(i*2),GADGETITEM_LOCALIZED
 		Next
 
 		styles=New TTextStyle[6]
-		styles[NORMAL]=TTextStyle.Create("{{options_editor_label_plaintext}}:",ScaledSize(6),ScaledSize(66),w)
-		styles[COMMENT]=TTextStyle.Create("{{options_editor_label_remarks}}:",ScaledSize(6),ScaledSize(96),w)
-		styles[QUOTED]=TTextStyle.Create("{{options_editor_label_strings}}:",ScaledSize(6),ScaledSize(126),w)
-		styles[KEYWORD]=TTextStyle.Create("{{options_editor_label_keywords}}:",ScaledSize(6),ScaledSize(156),w)
-		styles[NUMBER]=TTextStyle.Create("{{options_editor_label_numbers}}:",ScaledSize(6),ScaledSize(186),w)
-		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",ScaledSize(6),ScaledSize(216),w)
+		styles[NORMAL]=TTextStyle.Create("{{options_editor_label_plaintext}}:",ScaledSize(6),ScaledSize(70),w)
+		styles[COMMENT]=TTextStyle.Create("{{options_editor_label_remarks}}:",ScaledSize(6),ScaledSize(104),w)
+		styles[QUOTED]=TTextStyle.Create("{{options_editor_label_strings}}:",ScaledSize(6),ScaledSize(138),w)
+		styles[KEYWORD]=TTextStyle.Create("{{options_editor_label_keywords}}:",ScaledSize(6),ScaledSize(172),w)
+		styles[NUMBER]=TTextStyle.Create("{{options_editor_label_numbers}}:",ScaledSize(6),ScaledSize(206),w)
+		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",ScaledSize(6),ScaledSize(240),w)
 
-		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",ScaledSize(6),ScaledSize(250),w)
-		lineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_line_number}}:",ScaledSize(6),ScaledSize(280),w)
+		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",ScaledSize(6),ScaledSize(274),w)
+		lineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_line_number}}:",ScaledSize(6),ScaledSize(308),w)
 
-		textarea=CreateTextArea(ScaledSize(6),ScaledSize(310),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(256),w,TEXTAREA_READONLY)
+		textarea=CreateTextArea(ScaledSize(6),ScaledSize(342),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(250),w,TEXTAREA_READONLY)
 		SetGadgetText textarea,"'Sample Code~n~nresult = ((2.0 * 4) + 1)~nPrint( ~qResult: ~q + result )~n"
 
 		w=toolpanel
 		outputstyle=TGadgetStyle.Create("{{options_tools_label_output}}: ",ScaledSize(6),ScaledSize(6),w)
-		outputLineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_output_line_number}}:",ScaledSize(6),ScaledSize(66),w)
-		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(96),w)
+		outputLineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_output_line_number}}:",ScaledSize(6),ScaledSize(70),w)
+		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(104),w)
 
 		w=appstubpanel
-		appstublist=CreateListBox(ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(80),w)
-		appstubedit=CreateTextField(ScaledSize(6),ClientHeight(w)-ScaledSize(66),ClientWidth(w)-ScaledSize(12),ScaledSize(21),w)
+		appstublist=CreateListBox(ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(95),w)
+		appstubedit=CreateTextField(ScaledSize(6),ClientHeight(w)-ScaledSize(81),ClientWidth(w)-ScaledSize(12),ScaledSize(21),w)
 		addappstub=CreateButton("{{options_appstub_btn_add}}",ScaledSize(6),ClientHeight(w)-ScaledSize(40),ScaledSize(140),ScaledSize(26),w,BUTTON_PUSH)
 		delappstub=CreateButton("{{options_appstub_btn_del}}",ClientWidth(w)-ScaledSize(146),ClientHeight(w)-ScaledSize(40),ScaledSize(140),ScaledSize(26),w,BUTTON_PUSH)
 		appstubs = ["brl.appstub"]
@@ -1787,17 +1787,17 @@ Type TReplaceRequester Extends TRequester
 		Local x,y
 		Local	seek:TReplaceRequester
 		seek=New TReplaceRequester
-		seek.initrequester(host,"{{replace_window_title}}",ScaledSize(380),ScaledSize(80),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,"{{replace_btn_findnext}}")
+		seek.initrequester(host,"{{replace_window_title}}",ScaledSize(410),ScaledSize(80),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,"{{replace_btn_findnext}}")
 
 		y=11
 		CreateLabel( "{{replace_label_find}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
-		seek.findterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
+		seek.findterm=CreateTextField( ScaledSize(116),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
 		y:+32
 		CreateLabel( "{{replace_label_replacewith}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(88),ScaledSize(24),seek.window )
-		seek.replaceterm=CreateTextField( ScaledSize(96),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
+		seek.replaceterm=CreateTextField( ScaledSize(116),ScaledSize(y),ScaledSize(168),ScaledSize(21),seek.window )
 
-		x=ClientWidth(seek.window)-ScaledSize(102)
+		x=ClientWidth(seek.window)-ScaledSize(122)
 		y=8
 		seek.replaceit=CreateButton("{{replace_btn_replace}}",x,ScaledSize(y),ScaledSize(96),ScaledSize(26),seek.window)
 		seek.replaceall=CreateButton("{{replace_btn_replaceall}}",x,ScaledSize(y+32),ScaledSize(96),ScaledSize(26),seek.window)
@@ -2655,17 +2655,17 @@ Type TProjectRequester Extends TRequester
 		Local x,y
 		Local	proj:TProjectRequester = New TProjectRequester
 
-		proj.initrequester(host,"{{projman_window_title}}",ScaledSize(400),ScaledSize(168),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		proj.listbox=CreateListBox( ScaledSize(6),ScaledSize(8),ScaledSize(244),ScaledSize(154),proj.window )
+		proj.initrequester(host,"{{projman_window_title}}",ScaledSize(440),ScaledSize(188),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		proj.listbox=CreateListBox( ScaledSize(6),ScaledSize(8),ScaledSize(244),ScaledSize(174),proj.window )
 
-		x=ClientWidth(proj.window)-ScaledSize(144)
-		proj.add=CreateButton("{{projman_btn_addproj}}",x,ScaledSize(8),ScaledSize(138),ScaledSize(26),proj.window)
-		proj.remove=CreateButton("{{projman_btn_delproj}}",x,ScaledSize(40),ScaledSize(138),ScaledSize(26),proj.window)
+		x=ClientWidth(proj.window)-ScaledSize(164)
+		proj.add=CreateButton("{{projman_btn_addproj}}",x,ScaledSize(8),ScaledSize(158),ScaledSize(26),proj.window)
+		proj.remove=CreateButton("{{projman_btn_delproj}}",x,ScaledSize(44),ScaledSize(158),ScaledSize(26),proj.window)
 
-		proj.moveup=CreateButton("{{projman_btn_moveup}}",x,ScaledSize(72),ScaledSize(138),ScaledSize(26),proj.window)
-		proj.movedown=CreateButton("{{projman_btn_movedn}}",x,ScaledSize(104),ScaledSize(138),ScaledSize(26),proj.window)
+		proj.moveup=CreateButton("{{projman_btn_moveup}}",x,ScaledSize(80),ScaledSize(158),ScaledSize(26),proj.window)
+		proj.movedown=CreateButton("{{projman_btn_movedn}}",x,ScaledSize(116),ScaledSize(158),ScaledSize(26),proj.window)
 
-		proj.props=CreateButton("{{projman_btn_properties}}",x,ScaledSize(136),ScaledSize(138),ScaledSize(26),proj.window)
+		proj.props=CreateButton("{{projman_btn_properties}}",x,ScaledSize(152),ScaledSize(158),ScaledSize(26),proj.window)
 
 		DisableGadget proj.remove
 		DisableGadget proj.moveup
