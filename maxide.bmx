@@ -1054,6 +1054,79 @@ Type TCaretStyle
 	End Function
 End Type
 
+Type TLineNumberStyle
+
+	Field	label:TGadget,fgPanel:TGadget,bgPanel:TGadget
+	Field	fg:TColor, bg:TColor
+	Field enabled:TGadget
+	Field flags:Int
+
+	Method Set(fg, bg, flags:Int)
+		Self.fg.set(fg)
+		Self.bg.set(bg)
+		Self.flags = flags
+	End Method
+
+	Method ToString$()
+		Return ""+fg.red+","+fg.green+","+fg.blue+","+bg.red+","+bg.green+","+bg.blue+","+flags
+	End Method
+
+	Function GetArg:String(a:String Var)
+		Local p:Int = a.Find(",")
+		If p=-1 Then p=a.length
+		Local r:String = a[..p]
+		a=a[p+1..]
+		Return r
+	End Function
+
+	Method FromString(s:String)
+		fg.red=Int(GetArg(s))
+		fg.green=Int(GetArg(s))
+		fg.blue=Int(GetArg(s))
+		bg.red=Int(GetArg(s))
+		bg.green=Int(GetArg(s))
+		bg.blue=Int(GetArg(s))
+		flags=Int(GetArg(s))
+	End Method
+
+	Method Poll()
+		Select EventSource()
+			Case fgPanel
+				If EventID()=EVENT_MOUSEDOWN
+					Return fg.Request()
+				EndIf
+			Case bgPanel
+				If EventID()=EVENT_MOUSEDOWN
+					Return bg.Request()
+				EndIf
+			Case enabled
+				If EventData() Then flags = True Else flags = False
+				Return True
+		End Select
+	End Method
+
+	Method Refresh()
+		SetPanelColor fgPanel,fg.red,fg.green,fg.blue
+		SetPanelColor bgPanel,bg.red,bg.green,bg.blue
+		SetButtonState enabled, flags
+	End Method
+
+	Function Create:TLineNumberStyle(name$,xpos,ypos,window:TGadget)
+		Local	s:TLineNumberStyle
+		s=New TLineNumberStyle
+		s.fg=New TColor
+		s.bg=New TColor
+		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
+		s.fgPanel=CreatePanel(xpos+ScaledSize(94),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		SetPanelColor s.fgPanel,255,255,0
+		s.bgPanel=CreatePanel(xpos+ScaledSize(122),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		SetPanelColor s.bgPanel,255,255,0
+		s.enabled=CreateButton("{{linenumberstyle_enabled}}",xpos+ScaledSize(226),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+
+		Return s
+	End Function
+End Type
+
 Type TGadgetStyle
 
 	Global fntLibrary:TGUIFont[] =	[TGuiFont(Null), LookupGuiFont(GUIFONT_SYSTEM), LookupGuiFont(GUIFONT_MONOSPACED), ..
@@ -1208,6 +1281,8 @@ Type TOptionsRequester Extends TPanelRequester
 	Field addappstub:TGadget
 	Field delappstub:TGadget
 	Field caretStyle:TCaretStyle
+	Field lineNumberStyle:TLineNumberStyle
+	Field outputLineNumberStyle:TLineNumberStyle
 
 	Method Show()
 		RefreshGadgets()
@@ -1248,9 +1323,11 @@ Type TOptionsRequester Extends TPanelRequester
 		styles[NUMBER].set( $40ffff,0 )
 		styles[MATCHING].set( $ff4040,TEXTFORMAT_BOLD )
 		outputstyle.set(0,-1,GUIFONT_MONOSPACED)
+		outputLineNumberStyle.set(0,$ededed, False)
 		navstyle.set(0,-1,GUIFONT_SYSTEM)
 		appstubs = ["brl.appstub"]
 		caretStyle.set($ffffff,1)
+		lineNumberStyle.set($ffffff,$425c75, True)
 
 		RefreshGadgets
 	End Method
@@ -1276,6 +1353,7 @@ Type TOptionsRequester Extends TPanelRequester
 		stream.WriteLine "number_style="+styles[NUMBER].ToString()
 		stream.WriteLine "matched_style="+styles[MATCHING].ToString()
 		stream.WriteLine "console_style="+outputstyle.ToString()	'Renamed from 'output_style' to bump users to default monospace font.
+		stream.WriteLine "console_linenumber_style="+outputLineNumberStyle.ToString()
 		stream.WriteLine "navi_style="+navstyle.ToString()	'Renamed from 'nav_style' to bump users to default treeview font.
 		stream.WriteLine "hide_output="+hideoutput
 		stream.WriteLine "external_help="+externalhelp
@@ -1285,6 +1363,7 @@ Type TOptionsRequester Extends TPanelRequester
 			stream.WriteLine "appstub_" + i + "="+appstubs[i]
 		Next
 		stream.WriteLine "caret_style="+caretstyle.ToString()
+		stream.WriteLine "linenumber_style="+lineNumberStyle.ToString()
 	End Method
 
 	Method Read(stream:TStream)
@@ -1316,12 +1395,14 @@ Type TOptionsRequester Extends TPanelRequester
 				Case "number_style" styles[NUMBER].FromString(b)
 				Case "matched_style" styles[MATCHING].FromString(b)
 				Case "console_style" outputstyle.FromString(b)	'Renamed from 'output_style' to bump users to default monospace font.
+				Case "console_linenumber_style" outputLineNumberStyle.FromString(b)
 				Case "navi_style" navstyle.FromString(b)	'Renamed from 'nav_style' to bump users to default treeview font.
 				Case "hide_output" hideoutput=t
 				Case "external_help" externalhelp=t
 				Case "system_keys" systemkeys=t
 				Case "sort_code" sortcode=t
 				Case "caret_style" caretstyle.FromString(b)
+				Case "linenumber_style" lineNumberStyle.FromString(b)
 				Case "language"
 					Try
 						Local tmpLanguage:TMaxGUILanguage = LoadLanguage(host.FullPath(b))
@@ -1385,8 +1466,13 @@ Type TOptionsRequester Extends TPanelRequester
 		styles[NUMBER].format(textarea,36,1)
 		styles[KEYWORD].format(textarea,39,5)
 		styles[QUOTED].format(textarea,46,10)
+		lineNumberStyle.Refresh
+		TextAreaSetLineNumberBackColor textarea, lineNumberStyle.bg.red, lineNumberStyle.bg.green, lineNumberStyle.bg.blue
+		TextAreaSetLineNumberForeColor textarea, lineNumberStyle.fg.red, lineNumberStyle.fg.green, lineNumberStyle.fg.blue
+		TextAreaSetLineNumberEnable textarea, lineNumberStyle.flags
 		UnlockTextArea textarea
 		outputstyle.Refresh
+		outputLineNumberStyle.Refresh
 		navstyle.Refresh
 		dirty=True
 
@@ -1404,7 +1490,9 @@ Type TOptionsRequester Extends TPanelRequester
 			refresh:|styles[i].Poll()
 		Next
 		refresh:|caretstyle.Poll()
+		refresh:|lineNumberStyle.Poll()
 		refresh:|outputstyle.Poll()
+		refresh:|outputLineNumberStyle.Poll()
 		refresh:|navstyle.Poll()
 		Select EventID()
 			Case EVENT_GADGETACTION, EVENT_WINDOWCLOSE
@@ -1519,7 +1607,7 @@ Type TOptionsRequester Extends TPanelRequester
 
 	Method InitOptionsRequester(host:TCodePlay)
 		Local	w:TGadget
-		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(380), ScaledSize(460))
+		InitPanelRequester(host,"{{options_window_title}}", ScaledSize(380), ScaledSize(490))
 ' init values
 		editcolor=New TColor
 ' init gadgets
@@ -1567,13 +1655,15 @@ Type TOptionsRequester Extends TPanelRequester
 		styles[MATCHING]=TTextStyle.Create("{{options_editor_label_matchings}}:",ScaledSize(6),ScaledSize(216),w)
 
 		caretstyle = TCaretStyle.Create("{{options_editor_label_caret}}:",ScaledSize(6),ScaledSize(250),w)
+		lineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_line_number}}:",ScaledSize(6),ScaledSize(280),w)
 
-		textarea=CreateTextArea(ScaledSize(6),ScaledSize(280),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(256),w,TEXTAREA_READONLY)
+		textarea=CreateTextArea(ScaledSize(6),ScaledSize(310),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(256),w,TEXTAREA_READONLY)
 		SetGadgetText textarea,"'Sample Code~n~nresult = ((2.0 * 4) + 1)~nPrint( ~qResult: ~q + result )~n"
 
 		w=toolpanel
 		outputstyle=TGadgetStyle.Create("{{options_tools_label_output}}: ",ScaledSize(6),ScaledSize(6),w)
-		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(66),w)
+		outputLineNumberStyle = TLineNumberStyle.Create("{{options_editor_label_output_line_number}}:",ScaledSize(6),ScaledSize(66),w)
+		navstyle=TGadgetStyle.Create("{{options_tools_label_navbar}}: ",ScaledSize(6),ScaledSize(96),w)
 
 		w=appstubpanel
 		appstublist=CreateListBox(ScaledSize(6),ScaledSize(6),ClientWidth(w)-ScaledSize(12),ClientHeight(w)-ScaledSize(80),w)
@@ -3919,8 +4009,17 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			Case TOOLSELECTALL
 				If output SelectTextAreaText output
 			Case TOOLREFRESH
-				host.options.outputstyle.apply output
+				RefreshStyle()
 		End Select
+	End Method
+	
+	Method RefreshStyle()
+		host.options.outputstyle.apply output
+		Local rgb:TColor=host.options.outputLineNumberStyle.bg
+		TextAreaSetLineNumberBackColor output,rgb.red,rgb.green,rgb.blue
+		rgb=host.options.outputLineNumberStyle.fg
+		TextAreaSetLineNumberForeColor output,rgb.red,rgb.green,rgb.blue
+		TextAreaSetLineNumberEnable output, host.options.outputLineNumberStyle.flags
 	End Method
 
 	Method Close()
@@ -4061,7 +4160,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		SetGadgetFilter output,outputfilter,Self
 		SetGadgetText output," "	'simon was here
 		TextAreaEnableUndoRedo(output, False)
-		host.options.outputstyle.apply output
+		RefreshStyle()
 	End Method
 
 	Function CreateOutputMenu:TGadget()
@@ -4509,6 +4608,12 @@ Type TOpenCode Extends TToolPanel
 		SetTextAreaCaretWidth textarea,host.options.caretstyle.width
 		rgb=host.options.caretstyle.color
 		SetTextAreaCaretColor textarea,rgb.red,rgb.green,rgb.blue
+
+		rgb=host.options.lineNumberStyle.bg
+		TextAreaSetLineNumberBackColor textarea,rgb.red,rgb.green,rgb.blue
+		rgb=host.options.lineNumberStyle.fg
+		TextAreaSetLineNumberForeColor textarea,rgb.red,rgb.green,rgb.blue
+		TextAreaSetLineNumberEnable textarea, host.options.lineNumberStyle.flags
 
 		src=cleansrc
 		cleansrc=""
