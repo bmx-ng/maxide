@@ -5066,7 +5066,7 @@ Type TOpenCode Extends TToolPanel
 
 			If otherchar Then
 
-				absotherchar = (Abs otherchar)
+				absotherchar = Abs(otherchar)
 				currentchar = lsrc[currentcharpos]
 
 				LockTextArea textarea
