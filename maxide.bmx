@@ -5401,7 +5401,6 @@ Type TOpenCode Extends TToolPanel
 			If debug Or threaded
 				out=StripExt(host.FullPath(path))
 				If debug out:+".debug"
-				If threaded out:+".mt"
 				cmd:+" -o "+quote(out$)+" "
 			EndIf
 			cmd$:+" "+quote(host.FullPath(path))
@@ -6872,10 +6871,10 @@ Type TCodePlay
 		buildoptions=CreateMenu("{{menu_program_buildoptions}}",0,program)
 		quickenable=CreateMenu("{{menu_program_buildoptions_quick}}",MENUQUICKENABLED,buildoptions)
 		debugenable=CreateMenu("{{menu_program_buildoptions_debug}}",MENUDEBUGENABLED,buildoptions)
-		If (FileType( BlitzMaxPath()+"/mod/brl.mod/blitz.mod/blitz_gc_ms.c" )=FILETYPE_FILE) ..
-			Or (FileType( BlitzMaxpath()+"/mod/brl.mod/blitz.mod/bdwgc" )=FILETYPE_DIR)
-				threadedenable=CreateMenu("{{menu_program_buildoptions_threaded}}",MENUTHREADEDENABLED,buildoptions)
-		EndIf
+		'If (FileType( BlitzMaxPath()+"/mod/brl.mod/blitz.mod/blitz_gc_ms.c" )=FILETYPE_FILE) ..
+		'	Or (FileType( BlitzMaxpath()+"/mod/brl.mod/blitz.mod/bdwgc" )=FILETYPE_DIR)
+		'		threadedenable=CreateMenu("{{menu_program_buildoptions_threaded}}",MENUTHREADEDENABLED,buildoptions)
+		'EndIf
 
 		appoptions=CreateMenu("{{menu_program_appoptions}}",0,program)
 		consoleenable=CreateMenu("{{menu_program_buildoptions_consoleapp}}",MENUCONSOLEENABLED,appoptions)
