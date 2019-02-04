@@ -3977,7 +3977,10 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 
 	Method Stop()
 		If Not process Return
-		process.Terminate()
+
+		'does not exit apps if they use "AppTerminate()" and get debugged
+		'process.Terminate()
+		process.Kill()
 		FlushPipes process.pipe,process.err
 		process.Close()
 		process=Null
@@ -4012,7 +4015,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 				RefreshStyle()
 		End Select
 	End Method
-	
+
 	Method RefreshStyle()
 		host.options.outputstyle.apply output
 		Local rgb:TColor=host.options.outputLineNumberStyle.bg
@@ -5679,12 +5682,12 @@ Type TOpenCode Extends TToolPanel
 		"switch synchronized template this thread_local throw true try typedef typeid typename union unsigned using(1) virtual void volatile wchar_t while xor xor_eq"
 
 	Const KEYWORDS_CPP_PP:String = "#include #define #undef #if #ifdef #ifndef #error __FILE__ __LINE__ __DATE__ __TIME__ __TIMESTAMP__ pragma"
-	
+
 	Const KEYWORDS_OBJC:String = "auto else long switch break enum register typedef case extern return union char float short " + ..
 		"unsigned const for signed void continue goto sizeof volatile default if static while do int " + ..
 		"struct _Packed double protocol interface implementation NSObject NSInteger NSNumber CGFloat " + ..
 		"property nonatomic retain strong weak unsafe_unretained readwrite readonly"
-	
+
 	Const KEYWORDS_LUA:String = "and break do else elseif end false for function if in local nil not or repeat return then true until while"
 End Type
 
