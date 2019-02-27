@@ -1,4 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <path d="M13 13H3V3h10v10z" fill="#f6f6f6"/>
-  <path d="M12 12H4V4h8v8z" fill="#50bf00"/>
-</svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xml:space="preserve"
+   enable-background="new 0 0 16 16"
+   overflow="visible"
+   viewBox="0 0 16 16"
+   height="16"
+   width="16"
+   id="Ebene_1"
+   version="1.1"><metadata
+     id="metadata25"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+     id="defs23" /><g
+     transform="matrix(0.20520668,0,0,0.20394092,-1.9226142,-2.2808295)"
+     id="g3"><path
+       style="fill:#f6f6f6"
+       id="path5"
+       d="M 18.584,81.193 79.57,50.54 18.584,18.852 l 0,62.341 z m 10,-45.877 c 7.891,4.101 19.979,10.381 29.014,15.075 -9.082,4.565 -21.175,10.644 -29.014,14.583 0,-8.613 0,-20.942 0,-29.658 z" /><g
+       id="g7"><polygon
+         style="fill:#50bf00"
+         id="polygon9"
+         points="23.584,27.084 68.584,50.466 23.584,73.084 " /></g></g><g
+     id="g11"
+     display="none"><polygon
+       id="polygon13"
+       points="20.584,77.949 75.176,50.51 20.584,22.145  "
+       fill="#50BF00"
+       display="inline" /><path
+       id="path15"
+       d="M17.583,17.205v9.879v46v9.731l8.695-4.37l45-22.618l10.488-5.272l-10.418-5.413   l-45-23.382L17.583,17.205L17.583,17.205z M23.583,27.084l45,23.382l0,0l0,0l-45,22.618V27.084L23.583,27.084L23.583,27.084z"
+       fill="#F6F6F6"
+       display="inline" /></g><path
+     id="path17"
+     d="M81.25,52.5l-62.5,28.75v-62.5l62.5,30.75V52.5z"
+     fill="#F6F6F6"
+     display="none" /><path
+     id="path19"
+     d="M75,50.5L25,75V25l50,24.5V50.5z"
+     fill="#50BF00"
+     display="none" /></svg>
