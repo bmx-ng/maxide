@@ -70,7 +70,7 @@ Const DEFAULT_LANGUAGEPATH$ = "incbin::default.language.ini"
 Incbin "window_icon.png"
 ?
 
-Const IDE_VERSION$="1.50 [ng]"
+Const IDE_VERSION$="1.51 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = "MaxIDE "+IDE_VERSION
@@ -188,6 +188,8 @@ Const MENUQUICKSCANENABLED=63
 Const MENUUNIVERSALENABLED=64
 Const MENUWARNOVERENABLED=65
 Const MENUGDBDEBUGENABLED=66
+Const MENUREQUIREOVERRIDEENABLED=67
+Const MENUOVERRIDEERRORSENABLED=68
 
 Const MENUAPPOPTIONS=70
 Const MENUCONSOLEENABLED=71
@@ -5377,7 +5379,7 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
@@ -5396,6 +5398,9 @@ Type TOpenCode Extends TToolPanel
 			If universal cmd :+ " -i"
 			If warnover cmd :+ " -w"
 			If gdbdebug cmd :+ " -gdb"
+			If requireOverride cmd :+ " -override"
+			'bmk requires "-override" to use "-overerr"
+			If requireOverride and overrideError cmd :+ " -overerr"
 			If appstub And appstub <> "brl.appstub" cmd :+ " -b " + appstub
 
 			If platform cmd :+ " -l " + platform
@@ -5505,9 +5510,9 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLREPLACE
 				Return FindReplace(String(argument))
 			Case TOOLBUILD
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
@@ -5772,6 +5777,9 @@ Type TCodePlay
 	Field universalenable:TGadget,universalenabled		'menu,state
 	Field warnoverenable:TGadget,warnoverenabled		'menu,state
 	Field gdbdebugenable:TGadget,gdbdebugenabled		'menu,state
+	Field requireOverrideEnable:TGadget,requireOverrideEnabled		'menu,state
+	Field overrideErrorsEnable:TGadget,overrideErrorsEnabled		'menu,state
+
 	Field quickhelp:TQuickHelp
 	Field running
 	Field recentmenu:TGadget
@@ -5921,6 +5929,7 @@ Type TCodePlay
 		universalenabled=False
 		warnoverenabled=True
 		gdbdebugenabled=False
+		requireOverrideEnabled=False
 		For Local i:Int = 0 Until platformenabled.length
 			platformenabled[i] = False
 		Next
@@ -5988,6 +5997,10 @@ Type TCodePlay
 					warnoverenabled=Int(b$)
 				Case "prg_gdbdebug"
 					gdbdebugenabled=Int(b$)
+				Case "prg_requireoverride"
+					requireOverrideEnabled=Int(b$)
+				Case "prg_overrideerrors"
+					overrideErrorsEnabled=Int(b$)
 				Case "prg_platform"
 					For Local i:Int = 0 Until platformenabled.length
 						platformenabled[i] = False
@@ -6055,6 +6068,8 @@ Type TCodePlay
 		stream.WriteLine "prg_universal="+universalenabled
 		stream.WriteLine "prg_warnover="+warnoverenabled
 		stream.WriteLine "prg_gdbdebug="+gdbdebugenabled
+		stream.WriteLine "prg_requireoverride="+requireOverrideEnabled
+		stream.WriteLine "prg_overrideerrors="+overrideErrorsEnabled
 		For Local i:Int = 0 Until platformenabled.length
 			If platformenabled[i] Then
 				stream.WriteLine "prg_platform=" + i
@@ -6300,6 +6315,10 @@ Type TCodePlay
 		If universalenabled cmd:+"-i "
 		If warnoverenabled cmd:+"-w "
 		If gdbdebugenabled cmd:+"-gdb "
+		If requireOverrideEnabled cmd:+"-override "
+		'bmk requires "-override" to use "-overerr"
+		If requireOverrideEnabled and overrideErrorsEnabled cmd :+ " -overerr"
+		If warnoverenabled cmd:+"-w "
 		Local platform:String = GetPlatform()
 		Local architecture:String = GetArchitecture()
 		If platform cmd :+ "-l " + platform + " "
@@ -6889,6 +6908,8 @@ Type TCodePlay
 		universalenable=CreateMenu("{{menu_program_buildoptions_universal}}",MENUUNIVERSALENABLED,buildoptions)
 ?
 		warnoverenable=CreateMenu("{{menu_program_buildoptions_warnover}}",MENUWARNOVERENABLED,buildoptions)
+		requireOverrideEnable=CreateMenu("{{menu_program_buildoptions_requireoverride}}",MENUREQUIREOVERRIDEENABLED,buildoptions)
+		overrideErrorsEnable=CreateMenu("{{menu_program_buildoptions_overrideerrors}}",MENUOVERRIDEERRORSENABLED,buildoptions)
 
 		platform=CreateMenu("{{menu_program_platform}}",0,program)
 ?Not raspberrypi
@@ -6951,6 +6972,8 @@ Type TCodePlay
 		If universalenabled CheckMenu universalenable
 		If warnoverenabled CheckMenu warnoverenable
 		If gdbdebugenabled CheckMenu gdbdebugenable
+		If requireOverrideEnabled CheckMenu requireOverrideEnable
+		If overrideErrorsEnabled CheckMenu overrideErrorsEnable
 
 		Local defaultArch:Int = -1
 		For Local i:Int = 0 Until architectureenabled.length
@@ -7243,6 +7266,26 @@ Type TCodePlay
 				Else
 					warnoverenabled=True
 					CheckMenu warnoverenable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUREQUIREOVERRIDEENABLED
+				If requireOverrideEnabled
+					requireOverrideEnabled=False
+					UncheckMenu requireOverrideEnable
+				Else
+					requireOverrideEnabled=True
+					CheckMenu requireOverrideEnable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUOVERRIDEERRORSENABLED
+				If overrideErrorsEnabled
+					overrideErrorsEnabled=False
+					UncheckMenu overrideErrorsEnable
+				Else
+					overrideErrorsEnabled=True
+					CheckMenu overrideErrorsEnable
 				EndIf
 				UpdateWindowMenu window
 
