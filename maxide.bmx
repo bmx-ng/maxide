@@ -6316,9 +6316,13 @@ Type TCodePlay
 		If universalenabled cmd:+"-i "
 		If warnoverenabled cmd:+"-w "
 		If gdbdebugenabled cmd:+"-gdb "
-		If requireOverrideEnabled cmd:+"-override "
-		'bmk requires "-override" to use "-overerr"
-		If requireOverrideEnabled and overrideErrorsEnabled cmd :+ " -overerr"
+		If requireOverrideEnabled
+			cmd:+"-override "
+			'bmk requires "-override" to use "-overerr"
+			If overrideErrorsEnabled
+				cmd :+ " -overerr"
+			EndIf
+		EndIf
 		Local platform:String = GetPlatform()
 		Local architecture:String = GetArchitecture()
 		If platform cmd :+ "-l " + platform + " "
@@ -6974,6 +6978,9 @@ Type TCodePlay
 		If gdbdebugenabled CheckMenu gdbdebugenable
 		If requireOverrideEnabled CheckMenu requireOverrideEnable
 		If overrideErrorsEnabled CheckMenu overrideErrorsEnable
+		'need to do this below "CheckMenu" as it automatically enables
+		'the menu (again)
+		If not requireOverrideEnabled DisableMenu overrideErrorsEnable
 
 		Local defaultArch:Int = -1
 		For Local i:Int = 0 Until architectureenabled.length
@@ -7273,9 +7280,15 @@ Type TCodePlay
 				If requireOverrideEnabled
 					requireOverrideEnabled=False
 					UncheckMenu requireOverrideEnable
+					'disable menu entry as it requires "require override"
+					'this keeps "checked" information intact in case of
+					'a settings reactivation
+					if overrideErrorsEnable then DisableMenu overrideErrorsEnable
 				Else
 					requireOverrideEnabled=True
 					CheckMenu requireOverrideEnable
+
+					if overrideErrorsEnable then EnableMenu overrideErrorsEnable
 				EndIf
 				UpdateWindowMenu window
 
