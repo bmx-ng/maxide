@@ -1260,7 +1260,7 @@ Type TOptionsRequester Extends TPanelRequester
 	Field	optionspanel:TGadget,editorpanel:TGadget,toolpanel:TGadget,appstubpanel:TGadget
 ' settings
 	Field	showtoolbar,restoreopenfiles,autocapitalize,syntaxhighlight,autobackup,autoindent,hideoutput
-	Field	bracketmatching, externalhelp,systemkeys,sortcode
+	Field	bracketmatching, externalhelp,systemkeys,sortcode,restartaftershutdown
 	Field	tabsize,language$
 	Field	editfontname$,editfontsize,editcolor:TColor
 	Field	outputfontname$,outputfontsize,outputcolor:TColor
@@ -1270,7 +1270,7 @@ Type TOptionsRequester Extends TPanelRequester
 	Field languages:TGadget
 	Field	tabbutton:TGadget
 	Field	editpanel:TGadget,editbutton:TGadget
-	Field	buttons:TGadget[11]
+	Field	buttons:TGadget[12]
 	Field	styles:TTextStyle[]
 	Field	textarea:TGadget
 	Field	outputstyle:TGadgetStyle
@@ -1330,6 +1330,7 @@ Type TOptionsRequester Extends TPanelRequester
 		appstubs = ["brl.appstub"]
 		caretStyle.set($ffffff,1)
 		lineNumberStyle.set($ffffff,$425c75, True)
+		restartaftershutdown=True
 
 		RefreshGadgets
 	End Method
@@ -1361,6 +1362,7 @@ Type TOptionsRequester Extends TPanelRequester
 		stream.WriteLine "external_help="+externalhelp
 		stream.WriteLine "system_keys="+systemkeys
 		stream.WriteLine "sort_code="+sortcode
+		stream.WriteLine "restart_after_shutdown="+restartaftershutdown
 		For Local i:Int = 1 Until appstubs.length
 			stream.WriteLine "appstub_" + i + "="+appstubs[i]
 		Next
@@ -1403,6 +1405,7 @@ Type TOptionsRequester Extends TPanelRequester
 				Case "external_help" externalhelp=t
 				Case "system_keys" systemkeys=t
 				Case "sort_code" sortcode=t
+				Case "restart_after_shutdown" restartaftershutdown=t
 				Case "caret_style" caretstyle.FromString(b)
 				Case "linenumber_style" lineNumberStyle.FromString(b)
 				Case "language"
@@ -1449,6 +1452,7 @@ Type TOptionsRequester Extends TPanelRequester
 		SetButtonState buttons[8],externalhelp
 		SetButtonState buttons[9],systemkeys
 		SetButtonState buttons[10],sortcode
+		SetButtonState buttons[11],restartaftershutdown
 		SelectGadgetItem tabbutton,Min(Max(tabsize/2-1,0),7)
 		SetPanelColor editpanel,editcolor.red,editcolor.green,editcolor.blue
 		SetGadgetText editbutton,editfontname+" : "+editfontsize + "pt"
@@ -1510,6 +1514,7 @@ Type TOptionsRequester Extends TPanelRequester
 					Case buttons[8];externalhelp=ButtonState(buttons[8])
 					Case buttons[9];systemkeys=ButtonState(buttons[9]);dirty=2
 					Case buttons[10];sortcode=ButtonState(buttons[10]);dirty=3
+					Case buttons[11];restartaftershutdown=ButtonState(buttons[11]);dirty=4
 					Case tabber;SetPanelIndex SelectedGadgetItem(tabber)
 					Case ok
 						Hide()
@@ -1520,6 +1525,8 @@ Type TOptionsRequester Extends TPanelRequester
 								host.Restart
 							Case 3
 								host.RefreshAppStubs
+							Case 4
+								host.UpdateRestartState()
 						End Select
 						dirty=False
 						SnapShot()
@@ -1637,6 +1644,7 @@ Type TOptionsRequester Extends TPanelRequester
 		buttons[8]=CreateButton("{{options_options_btn_useexternalbrowser}}",ScaledSize(6),ScaledSize(216),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 		buttons[9]=CreateButton("{{options_options_btn_osshortcuts}}",ScaledSize(6),ScaledSize(242),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 		buttons[10]=CreateButton("{{options_options_btn_sortcodeviewnodes}}",ScaledSize(6),ScaledSize(268),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
+		buttons[11]=CreateButton("{{options_options_btn_restartaftershutdown}}",ScaledSize(6),ScaledSize(294),ClientWidth(w)-ScaledSize(12),ScaledSize(26),w,BUTTON_CHECKBOX)
 
 		w=editorpanel
 		CreateLabel("{{options_editor_label_background}}:",ScaledSize(6),ScaledSize(6+4),ScaledSize(90),ScaledSize(24),w)
@@ -6301,6 +6309,17 @@ Type TCodePlay
 			CheckMenu appstubmenus[0]
 		End If
 	End Method
+	
+	Method UpdateRestartState()
+?win32
+		If options.restartaftershutdown Then
+			' set to restart if the system restarted
+			RegisterApplicationRestart(Null, RESTART_NO_CRASH | RESTART_NO_HANG)
+		Else
+			UnregisterApplicationRestart()
+		End If
+?
+	End Method
 
 	Method BuildModules(buildall)
 		Local cmd$,out$,exe$
@@ -6767,6 +6786,10 @@ Type TCodePlay
 			open=OpenSource(AppArgs[i])
 			tmpProgValue:+tmpProgStep;UpdateProgBar progress,tmpProgValue;PollSystem
 		Next
+
+		If options.restartaftershutdown Then
+			UpdateRestartState()
+		End If
 
 		HideGadget splash;FreeGadget splash
 		PollSystem
