@@ -6107,7 +6107,13 @@ Type TCodePlay
 		Next
 		For Local panel:TToolPanel = EachIn panels
 			f$=panel.path
-			If f$ And Not IsTempPath(f$) stream.WriteLine "file_open="+f$
+			If TOpenCode(panel)
+				Local openCode:TOpenCode = TOpenCode(panel)
+				Local isActive:Int = (activepanel = openCode)
+				If f$ And Not IsTempPath(f$) stream.WriteLine "file_open=" + f$ + "|" + isActive + "|" + openCode.cursorPos
+			Else
+				If f$ And Not IsTempPath(f$) stream.WriteLine "file_open="+f$
+			EndIf
 		Next
 		projects.write(stream)
 		stream.close
@@ -6309,7 +6315,7 @@ Type TCodePlay
 			CheckMenu appstubmenus[0]
 		End If
 	End Method
-	
+
 	Method UpdateRestartState()
 ?win32
 		If options.restartaftershutdown Then
@@ -6769,12 +6775,33 @@ Type TCodePlay
 
 'open files from .ini restorelist
 		If options.restoreopenfiles
+			Local activePanel:TToolPanel
 			If Not openlist.IsEmpty() Then tmpProgStep = (0.3/openlist.Count())
-			For Local f$=EachIn openlist
-				open=OpenSource(f$)
-				If open And f$=openlock open.SetLocked(True)
-				tmpProgValue:+tmpProgStep;UpdateProgBar progress,tmpProgValue
+			For Local openListLine:String = EachIn openlist
+				Local parts:String[] = openListLine.split("|")
+				Local fileURI:String = parts[0]
+				Local fileActive:Int = 0
+				Local fileCursorPos:Int = 0
+				If parts.length > 1 Then fileActive = Int(parts[1])
+				If parts.length > 2 Then fileCursorPos = Int(parts[2])
+
+				open=OpenSource(fileURI)
+				If open
+					If fileActive Then activePanel = open
+
+					'set to stored cursor position
+					open.cursorPos = fileCursorPos
+					SelectTextAreaText( open.textarea, open.cursorpos, 0, TEXTAREA_CHARS )
+				EndIf
+				If open And fileURI = openlock
+					open.SetLocked(True)
+				EndIf
+
+				tmpProgValue :+ tmpProgStep
+				UpdateProgBar progress,tmpProgValue
 			Next
+
+			If activePanel Then SelectPanel( activePanel )
 		EndIf
 
 		tmpProgValue = 0.9
