@@ -6317,7 +6317,7 @@ Type TCodePlay
 	End Method
 
 	Method UpdateRestartState()
-?win32
+?win32x64
 		If options.restartaftershutdown Then
 			' set to restart if the system restarted
 			RegisterApplicationRestart(Null, RESTART_NO_CRASH | RESTART_NO_HANG)
