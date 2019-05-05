@@ -997,28 +997,37 @@ End Type
 
 Type TCaretStyle
 
-	Field	label:TGadget,panel:TGadget,combo:TGadget
+	Field	label:TGadget, panel:TGadget, combo:TGadget  
+	Field	caretLinePanel:TGadget, caretLineVisibleToggle:TGadget
 	Field	color:TColor
+	Field	caretLineColor:TColor
+	Field	caretLineVisible:Int
 	Field	width:Int = 1
 
-	Method Set(rgb,width)
+	Method Set(rgb:Int, width:Int, caretLineRGB:Int)
 		color.set(rgb)
+		caretLineColor.set(caretLineRGB)
 		Self.width=width
 	End Method
 
 	Method ToString$()
-		Return ""+color.red+","+color.green+","+color.blue+","+width
+		Return ""+color.red+","+color.green+","+color.blue+","+width+","+caretLineColor.red+","+caretLineColor.green+","+caretLineColor.blue+","+caretLineVisible
 	End Method
 
 	Method FromString(s$)
-		Local	p,q,r
-		p=s.Find(",")+1;If Not p Return
-		q=s.Find(",",p)+1;If Not q Return
-		r=s.Find(",",q)+1;If Not r Return
-		color.red=Int(s[..p-1])
-		color.green=Int(s[p..q-1])
-		color.blue=Int(s[q..r-1])
-		width=Min(3,Max(1,Int(s[r..])))
+		Local parts:String[] = s.split(",")
+		If parts.length < 4 then Return
+		color.red = Int(parts[0])
+		color.green = Int(parts[1])
+		color.blue = Int(parts[2])
+		width = Min(3, Max(1,Int(parts[3])))
+
+		If parts.length >= 8
+			caretLineColor.red = Int(parts[4])
+			caretLineColor.green = Int(parts[5])
+			caretLineColor.blue = Int(parts[6])
+			caretLineVisible = Int(parts[7])
+		EndIf
 	End Method
 
 	Method Poll()
@@ -1027,24 +1036,35 @@ Type TCaretStyle
 				If EventID()=EVENT_MOUSEDOWN
 					Return color.Request()
 				EndIf
+			Case caretLinePanel
+				If EventID() = EVENT_MOUSEDOWN
+					Return caretLineColor.Request()
+				EndIf
 			Case combo
 				width=SelectedGadgetItem(combo) + 1
 				Return True
-			'Case underline
-			'	If EventData() Then flags:|TEXTFORMAT_UNDERLINE Else flags:&~TEXTFORMAT_UNDERLINE
-			'	Return True
+			Case caretLineVisibleToggle
+				If EventData() 
+					caretLineVisible = True
+				Else
+					caretLineVisible = False
+				EndIf
+				Return True
 		End Select
 	End Method
 
 	Method Refresh()
 		SetPanelColor panel,color.red,color.green,color.blue
+		SetPanelColor caretLinePanel, caretLineColor.red, caretLineColor.green, caretLineColor.blue
 		SelectGadgetItem combo,width - 1
+		SetButtonState(caretLineVisibleToggle, caretLineVisible)
 	End Method
 
 	Function Create:TCaretStyle(name$,xpos,ypos,window:TGadget)
 		Local	s:TCaretStyle
-		s=New TCaretStyle
-		s.color=New TColor
+		s = New TCaretStyle
+		s.color = New TColor
+		s.caretLineColor = New TColor
 		s.label=CreateLabel(name,xpos,ypos+ScaledSize(4),ScaledSize(90),ScaledSize(24),window)
 		s.panel=CreatePanel(xpos+ScaledSize(114),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
@@ -1052,6 +1072,11 @@ Type TCaretStyle
 		AddGadgetItem s.combo,"{{caretstyle_width_1}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_2}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_3}}",GADGETITEM_LOCALIZED
+
+		s.caretLinePanel = CreatePanel(xpos+ScaledSize(240),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		SetPanelColor(s.caretLinePanel, 255, 255, 0)
+
+		s.caretLineVisibleToggle = CreateButton("{{caretline_visible}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 		Return s
 	End Function
 End Type
@@ -1328,7 +1353,7 @@ Type TOptionsRequester Extends TPanelRequester
 		outputLineNumberStyle.set(0,$ededed, False)
 		navstyle.set(0,-1,GUIFONT_SYSTEM)
 		appstubs = ["brl.appstub"]
-		caretStyle.set($ffffff,1)
+		caretStyle.set($ffffff,1, $efefef)
 		lineNumberStyle.set($ffffff,$425c75, True)
 		restartaftershutdown=True
 
@@ -1476,6 +1501,8 @@ Type TOptionsRequester Extends TPanelRequester
 		TextAreaSetLineNumberBackColor textarea, lineNumberStyle.bg.red, lineNumberStyle.bg.green, lineNumberStyle.bg.blue
 		TextAreaSetLineNumberForeColor textarea, lineNumberStyle.fg.red, lineNumberStyle.fg.green, lineNumberStyle.fg.blue
 		TextAreaSetLineNumberEnable textarea, lineNumberStyle.flags
+		TextAreaSetCaretLineBackgroundColor(textarea, caretStyle.caretLineColor.red, caretStyle.caretLineColor.green, caretStyle.caretLineColor.blue)
+		TextAreaSetCaretLineVisible(textarea, caretStyle.caretLineVisible)
 		UnlockTextArea textarea
 		outputstyle.Refresh
 		outputLineNumberStyle.Refresh
@@ -4627,6 +4654,8 @@ Type TOpenCode Extends TToolPanel
 		rgb=host.options.lineNumberStyle.fg
 		TextAreaSetLineNumberForeColor textarea,rgb.red,rgb.green,rgb.blue
 		TextAreaSetLineNumberEnable textarea, host.options.lineNumberStyle.flags
+		TextAreaSetCaretLineBackgroundColor(textarea, host.options.caretStyle.caretLineColor.red, host.options.caretStyle.caretLineColor.green, host.options.caretStyle.caretLineColor.blue)
+		TextAreaSetCaretLineVisible(textarea, host.options.caretStyle.caretLineVisible)
 
 		src=cleansrc
 		cleansrc=""
@@ -5408,7 +5437,7 @@ Type TOpenCode Extends TToolPanel
 			If gdbdebug cmd :+ " -gdb"
 			If requireOverride cmd :+ " -override"
 			'bmk requires "-override" to use "-overerr"
-			If requireOverride and overrideError cmd :+ " -overerr"
+			If requireOverride And overrideError cmd :+ " -overerr"
 			If appstub And appstub <> "brl.appstub" cmd :+ " -b " + appstub
 
 			If platform cmd :+ " -l " + platform
@@ -7030,7 +7059,7 @@ Type TCodePlay
 		If overrideErrorsEnabled CheckMenu overrideErrorsEnable
 		'need to do this below "CheckMenu" as it automatically enables
 		'the menu (again)
-		If not requireOverrideEnabled DisableMenu overrideErrorsEnable
+		If Not requireOverrideEnabled DisableMenu overrideErrorsEnable
 
 		Local defaultArch:Int = -1
 		For Local i:Int = 0 Until architectureenabled.length
@@ -7333,12 +7362,12 @@ Type TCodePlay
 					'disable menu entry as it requires "require override"
 					'this keeps "checked" information intact in case of
 					'a settings reactivation
-					if overrideErrorsEnable then DisableMenu overrideErrorsEnable
+					If overrideErrorsEnable Then DisableMenu overrideErrorsEnable
 				Else
 					requireOverrideEnabled=True
 					CheckMenu requireOverrideEnable
 
-					if overrideErrorsEnable then EnableMenu overrideErrorsEnable
+					If overrideErrorsEnable Then EnableMenu overrideErrorsEnable
 				EndIf
 				UpdateWindowMenu window
 
@@ -7809,6 +7838,7 @@ Type TCodePlay
 				End Select
 
 			Case EVENT_WINDOWACCEPT, EVENT_APPOPENFILE
+				print EventText()
 				OpenSource EventText()
 
 			Case EVENT_APPTERMINATE
