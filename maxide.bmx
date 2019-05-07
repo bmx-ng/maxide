@@ -986,7 +986,7 @@ Type TTextStyle
 		s.panel=CreatePanel(xpos+ScaledSize(114),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.panel,255,255,0
 		s.combo=CreateComboBox(xpos+ScaledSize(142),ypos,ScaledSize(96),ScaledSize(24),window)
-		s.underline=CreateButton("{{txtstyle_underline}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+		s.underline=CreateButton("{{txtstyle_underline}}",xpos+ScaledSize(270),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 		AddGadgetItem s.combo,"{{txtstyle_normal}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_bold}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{txtstyle_italic}}",GADGETITEM_LOCALIZED
@@ -1073,10 +1073,10 @@ Type TCaretStyle
 		AddGadgetItem s.combo,"{{caretstyle_width_2}}",GADGETITEM_LOCALIZED
 		AddGadgetItem s.combo,"{{caretstyle_width_3}}",GADGETITEM_LOCALIZED
 
-		s.caretLinePanel = CreatePanel(xpos+ScaledSize(240),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
+		s.caretLinePanel = CreatePanel(xpos+ScaledSize(242),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor(s.caretLinePanel, 255, 255, 0)
 
-		s.caretLineVisibleToggle = CreateButton("{{caretline_visible}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+		s.caretLineVisibleToggle = CreateButton("{{caretline_visible}}",xpos+ScaledSize(270),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 		Return s
 	End Function
 End Type
@@ -1148,7 +1148,7 @@ Type TLineNumberStyle
 		SetPanelColor s.fgPanel,255,255,0
 		s.bgPanel=CreatePanel(xpos+ScaledSize(142),ypos,ScaledSize(24),ScaledSize(24),window,PANEL_BORDER|PANEL_ACTIVE)
 		SetPanelColor s.bgPanel,255,255,0
-		s.enabled=CreateButton("{{linenumberstyle_enabled}}",xpos+ScaledSize(266),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
+		s.enabled=CreateButton("{{linenumberstyle_enabled}}",xpos+ScaledSize(270),ypos,ClientWidth(window)-(xpos+ScaledSize(220)),ScaledSize(24),window,BUTTON_CHECKBOX)
 
 		Return s
 	End Function
