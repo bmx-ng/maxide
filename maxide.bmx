@@ -1505,7 +1505,7 @@ Type TOptionsRequester Extends TPanelRequester
 		TextAreaSetCaretLineBackgroundColor(textarea, caretStyle.caretLineColor.red, caretStyle.caretLineColor.green, caretStyle.caretLineColor.blue)
 		TextAreaSetCaretLineVisible(textarea, caretStyle.caretLineVisible)
 		
-		TextAreaSetBracketMatchingColor textarea, styles[MATCHING].color.red, styles[MATCHING].color.green, styles[MATCHING].color.blue
+		TextAreaSetBracketMatchingColor textarea, styles[MATCHING].color.red, styles[MATCHING].color.green, styles[MATCHING].color.blue, styles[MATCHING].flags
 		UnlockTextArea textarea
 		outputstyle.Refresh
 		outputLineNumberStyle.Refresh
@@ -4659,7 +4659,7 @@ Type TOpenCode Extends TToolPanel
 		TextAreaSetLineNumberEnable textarea, host.options.lineNumberStyle.flags
 		TextAreaSetCaretLineBackgroundColor(textarea, host.options.caretStyle.caretLineColor.red, host.options.caretStyle.caretLineColor.green, host.options.caretStyle.caretLineColor.blue)
 		TextAreaSetCaretLineVisible(textarea, host.options.caretStyle.caretLineVisible)
-		TextAreaSetBracketMatchingColor(textarea, host.options.styles[MATCHING].color.red, host.options.styles[MATCHING].color.green, host.options.styles[MATCHING].color.blue)
+		TextAreaSetBracketMatchingColor(textarea, host.options.styles[MATCHING].color.red, host.options.styles[MATCHING].color.green, host.options.styles[MATCHING].color.blue, host.options.styles[MATCHING].flags)
 
 		src=cleansrc
 		cleansrc=""
