@@ -5187,11 +5187,13 @@ Type TOpenCode Extends TToolPanel
 ' v122: make sure the entire block is selected (start cursor pos may in the middle of the line)
 		SelectTextAreaText textarea , p0 , p1 , TEXTAREA_LINES
 		UpdateCursor
+		TextAreaBeginUndoAction textarea
 		For Local i:Int = 0 Until p1
 			a$="~t"+TextAreaText(textarea,p0+i,1,TEXTAREA_LINES)
 			SetTextAreaText textarea,a$,p0+i,1,TEXTAREA_LINES
 		Next
 		SelectTextAreaText textarea,p0,p1,TEXTAREA_LINES
+		TextAreaEndUndoAction textarea
 		UpdateCursor
 		UpdateCode
 	End Method
@@ -5204,6 +5206,7 @@ Type TOpenCode Extends TToolPanel
 ' v122: make sure the entire block is selected (start cursor pos may in the middle of the line)
 		SelectTextAreaText textarea , p0 , p1 , TEXTAREA_LINES
 		UpdateCursor
+		TextAreaBeginUndoAction textarea
 		For Local i:Int = 0 Until p1
 			a$=TextAreaText(textarea,p0+i,1,TEXTAREA_LINES)
 			If a[0]=9 a$=a$[1..];modified=True
@@ -5217,6 +5220,7 @@ Type TOpenCode Extends TToolPanel
 			Next
 		EndIf
 		SelectTextAreaText textarea,p0,p1,TEXTAREA_LINES
+		TextAreaEndUndoAction textarea
 		UpdateCursor
 		UpdateCode
 	End Method
