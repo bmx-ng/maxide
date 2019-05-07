@@ -1500,9 +1500,12 @@ Type TOptionsRequester Extends TPanelRequester
 		lineNumberStyle.Refresh
 		TextAreaSetLineNumberBackColor textarea, lineNumberStyle.bg.red, lineNumberStyle.bg.green, lineNumberStyle.bg.blue
 		TextAreaSetLineNumberForeColor textarea, lineNumberStyle.fg.red, lineNumberStyle.fg.green, lineNumberStyle.fg.blue
+
 		TextAreaSetLineNumberEnable textarea, lineNumberStyle.flags
 		TextAreaSetCaretLineBackgroundColor(textarea, caretStyle.caretLineColor.red, caretStyle.caretLineColor.green, caretStyle.caretLineColor.blue)
 		TextAreaSetCaretLineVisible(textarea, caretStyle.caretLineVisible)
+		
+		TextAreaSetBracketMatchingColor textarea, styles[MATCHING].color.red, styles[MATCHING].color.green, styles[MATCHING].color.blue
 		UnlockTextArea textarea
 		outputstyle.Refresh
 		outputLineNumberStyle.Refresh
@@ -4656,6 +4659,7 @@ Type TOpenCode Extends TToolPanel
 		TextAreaSetLineNumberEnable textarea, host.options.lineNumberStyle.flags
 		TextAreaSetCaretLineBackgroundColor(textarea, host.options.caretStyle.caretLineColor.red, host.options.caretStyle.caretLineColor.green, host.options.caretStyle.caretLineColor.blue)
 		TextAreaSetCaretLineVisible(textarea, host.options.caretStyle.caretLineVisible)
+		TextAreaSetBracketMatchingColor(textarea, host.options.styles[MATCHING].color.red, host.options.styles[MATCHING].color.green, host.options.styles[MATCHING].color.blue)
 
 		src=cleansrc
 		cleansrc=""
@@ -5069,7 +5073,12 @@ Type TOpenCode Extends TToolPanel
 	Field currentbrackets:Int[]
 
 	Method BracketMatching(lsrc$,cln1=-1,cln2=-1,alwaysfind:Int = False)
-
+		
+		If TextAreaHasBracketMatching(textarea) Then
+			TextAreaMatchBrackets(textarea)
+			Return
+		End If
+		
 		Local check:Int, depth:Int, style:TTextStyle[] = host.options.styles
 		Local otherchar:Int = 0, absotherchar:Int = 0, othercharpos:Int = 0, limit:Int
 		Local currentchar:Int = 0, currentcharpos:Int = Max(cursorpos-1,0)
