@@ -70,7 +70,7 @@ Const DEFAULT_LANGUAGEPATH$ = "incbin::default.language.ini"
 Incbin "window_icon.png"
 ?
 
-Const IDE_VERSION$="1.52 [ng]"
+Const IDE_VERSION$="1.53 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = "MaxIDE "+IDE_VERSION
