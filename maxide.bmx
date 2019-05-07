@@ -7838,7 +7838,6 @@ Type TCodePlay
 				End Select
 
 			Case EVENT_WINDOWACCEPT, EVENT_APPOPENFILE
-				print EventText()
 				OpenSource EventText()
 
 			Case EVENT_APPTERMINATE
