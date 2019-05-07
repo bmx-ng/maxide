@@ -6960,8 +6960,8 @@ Type TCodePlay
 		CreateMenu "",0,edit
 		CreateMenu "{{menu_edit_selectall}}",MENUSELECTALL,edit,KEY_A,MENUMOD
 		CreateMenu "",0,edit
-		CreateMenu "{{menu_edit_blockindent}}",MENUINDENT,edit,KEY_CLOSEBRACKET,MENUMOD
-		CreateMenu "{{menu_edit_blockoutdent}}",MENUOUTDENT,edit,KEY_OPENBRACKET,MENUMOD
+		CreateMenu "{{menu_edit_blockindent}}",MENUINDENT,edit,KEY_TAB
+		CreateMenu "{{menu_edit_blockoutdent}}",MENUOUTDENT,edit,KEY_TAB,MODIFIER_SHIFT
 		CreateMenu "",0,edit
 		CreateMenu "{{menu_edit_find}}",MENUFIND,edit,KEY_F,MENUMOD
 ?MacOS
