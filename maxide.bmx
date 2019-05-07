@@ -5230,7 +5230,7 @@ Type TOpenCode Extends TToolPanel
 ?MacOS
 		If key=25 And mods=MODIFIER_SHIFT key=KEY_TAB
 ?
-		If id=EVENT_KEYCHAR And this And key=KEY_TAB And TextAreaSelLen( this.textarea,TEXTAREA_CHARS )
+		If id=EVENT_KEYCHAR And this And key=KEY_TAB And Not TextAreaHasBlockIndent(this.textarea) And TextAreaSelLen( this.textarea,TEXTAREA_CHARS )
 			Select mods
 				Case MODIFIER_NONE
 					this.IndentCode
