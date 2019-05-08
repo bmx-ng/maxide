@@ -38,12 +38,6 @@ Import MaxGUI.maxguitextareascintilla
 ?
 Import MaxGUI.ProxyGadgets
 
-'?Win32x86
-'Import "maxicons.o"
-'?Win32x64
-'Import "maxicons64.o"
-'?
-
 Import brl.eventqueue
 Import brl.filesystem
 Import brl.system
