@@ -590,10 +590,9 @@ Type TAboutRequester Extends TRequester
 		?Win32
 		strHeadings:+["{{about_label_mingwpath}}:"]
 		' check For Local mingw32 dir First
-		If FileType(BlitzMaxPath() + "/MinGW32") = FILETYPE_DIR Then
-			strValues:+[(BlitzMaxPath() + "/MinGW32").Replace("/","\")]
-		Else If getenv_("MINGW") Then
-			strValues:+[getenv_("MINGW")]
+		Local path:String = MinGWPath()
+		If path Then
+			strValues:+[path.Replace("/", "\")]
 		Else
 			strValues:+[LocalizeString("{{about_error_unavailable}}")]
 		EndIf
@@ -663,11 +662,8 @@ Type TAboutRequester Extends TRequester
 
 	Method GetGCC$()
 		?Win32
-		Local gccPath:String = BlitzMaxPath() + "/MinGW32"
-		If Not FileType(gccPath) Then
-			gccPath = getenv_("MinGW")
-			If Not gccPath Then Return LocalizeString("{{about_error_notapplicable}}")
-		End If
+		Local gccPath:String = MinGWPath()
+		If Not gccPath Then Return LocalizeString("{{about_error_notapplicable}}")
 		gccPath :+ "/bin/gcc"
 		gccPath = gccPath.Replace("/", "\")
 		? Not win32
@@ -678,11 +674,8 @@ Type TAboutRequester Extends TRequester
 
 	Method GetGpp$()
 		?Win32
-		Local gppPath:String = BlitzMaxPath() + "/MinGW32"
-		If Not FileType(gppPath) Then
-			gppPath = getenv_("MinGW")
-			If Not gppPath Then Return LocalizeString("{{about_error_notapplicable}}")
-		End If
+		Local gppPath:String = MinGWPath()
+		If Not gppPath Then Return LocalizeString("{{about_error_notapplicable}}")
 		gppPath:+ "/bin/g++"
 		gppPath = gppPath.Replace("/", "\")
 		? Not win32
@@ -7098,10 +7091,7 @@ Type TCodePlay
 		'UpdateArchitectureMenus()
 
 ?Win32
-		Local mingw$=BlitzMaxPath() + "/MinGW32"
-		If Not FileType(mingw) Then
-			mingw = getenv_("MINGW")
-		End If
+		Local mingw:String = MinGWPath()
 		If Not mingw
 			DisableMenu buildmods
 			DisableMenu buildallmods
