@@ -1002,12 +1002,14 @@ Type TCaretStyle
 	Field	color:TColor
 	Field	caretLineColor:TColor
 	Field	caretLineVisible:Int
+	Field   caretLineAlpha:Int = 30
 	Field	width:Int = 1
 
-	Method Set(rgb:Int, width:Int, caretLineRGB:Int)
+	Method Set(rgb:Int, width:Int, caretLineRGB:Int, caretLineVisible:Int)
 		color.set(rgb)
 		caretLineColor.set(caretLineRGB)
 		Self.width=width
+		Self.caretLineVisible = caretLineVisible
 	End Method
 
 	Method ToString$()
@@ -1353,7 +1355,7 @@ Type TOptionsRequester Extends TPanelRequester
 		outputLineNumberStyle.set(0,$ededed, False)
 		navstyle.set(0,-1,GUIFONT_SYSTEM)
 		appstubs = ["brl.appstub"]
-		caretStyle.set($ffffff,1, $efefef)
+		caretStyle.set($ffffff,1, $ffffff, False)
 		lineNumberStyle.set($ffffff,$425c75, True)
 		restartaftershutdown=True
 
@@ -1502,7 +1504,7 @@ Type TOptionsRequester Extends TPanelRequester
 		TextAreaSetLineNumberForeColor textarea, lineNumberStyle.fg.red, lineNumberStyle.fg.green, lineNumberStyle.fg.blue
 
 		TextAreaSetLineNumberEnable textarea, lineNumberStyle.flags
-		TextAreaSetCaretLineBackgroundColor(textarea, caretStyle.caretLineColor.red, caretStyle.caretLineColor.green, caretStyle.caretLineColor.blue)
+		TextAreaSetCaretLineBackgroundColor(textarea, caretStyle.caretLineColor.red, caretStyle.caretLineColor.green, caretStyle.caretLineColor.blue, caretStyle.caretLineAlpha)
 		TextAreaSetCaretLineVisible(textarea, caretStyle.caretLineVisible)
 		
 		TextAreaSetBracketMatchingColor textarea, styles[MATCHING].color.red, styles[MATCHING].color.green, styles[MATCHING].color.blue, styles[MATCHING].flags
@@ -4657,7 +4659,7 @@ Type TOpenCode Extends TToolPanel
 		rgb=host.options.lineNumberStyle.fg
 		TextAreaSetLineNumberForeColor textarea,rgb.red,rgb.green,rgb.blue
 		TextAreaSetLineNumberEnable textarea, host.options.lineNumberStyle.flags
-		TextAreaSetCaretLineBackgroundColor(textarea, host.options.caretStyle.caretLineColor.red, host.options.caretStyle.caretLineColor.green, host.options.caretStyle.caretLineColor.blue)
+		TextAreaSetCaretLineBackgroundColor(textarea, host.options.caretStyle.caretLineColor.red, host.options.caretStyle.caretLineColor.green, host.options.caretStyle.caretLineColor.blue,host.options.caretStyle.caretLineAlpha)
 		TextAreaSetCaretLineVisible(textarea, host.options.caretStyle.caretLineVisible)
 		TextAreaSetBracketMatchingColor(textarea, host.options.styles[MATCHING].color.red, host.options.styles[MATCHING].color.green, host.options.styles[MATCHING].color.blue, host.options.styles[MATCHING].flags)
 
