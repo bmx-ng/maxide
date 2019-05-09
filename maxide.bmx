@@ -390,7 +390,7 @@ Type TRequester
 	Field	centered, modal
 
 	Method initrequester(owner:TCodeplay,label$,w=260,h=60,flags=STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,oktext$="{{btn_ok}}")
-		local buttonPadding:int = 7
+		Local buttonPadding:Int = 7
 		host=owner
 		If (flags&STYLE_MODAL) Then flags:|STYLE_STDBORDER
 
@@ -1017,7 +1017,7 @@ Type TCaretStyle
 
 	Method FromString(s$)
 		Local parts:String[] = s.split(",")
-		If parts.length < 4 then Return
+		If parts.length < 4 Then Return
 		color.red = Int(parts[0])
 		color.green = Int(parts[1])
 		color.blue = Int(parts[2])
@@ -5329,7 +5329,7 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:int, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:Int, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
@@ -5349,7 +5349,7 @@ Type TOpenCode Extends TToolPanel
 			If warnover cmd :+ " -w"
 			If gdbdebug cmd :+ " -gdb"
 			'UPX compression is only available for "makeapp"
-			If (guiBuild Or consoleBuild) and useUPX cmd :+ " -upx"
+			If (guiBuild Or consoleBuild) And useUPX cmd :+ " -upx"
 			If requireOverride cmd :+ " -override"
 			'bmk requires "-override" to use "-overerr"
 			If requireOverride And overrideError cmd :+ " -overerr"
@@ -7721,8 +7721,8 @@ Type TCodePlay
 	End Method
 	
 	
-	Method CanRunUPX:int()
-		local platform:string = GetPlatform()
+	Method CanRunUPX:Int()
+		Local platform:String = GetPlatform()
 		If platform = "emscripten" Or platform = "nx" Or platform = "ios" Then
 			Return False
 		End If
