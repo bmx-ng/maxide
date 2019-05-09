@@ -731,7 +731,7 @@ Type TAboutRequester Extends TRequester
 	Function Create:TAboutRequester(host:TCodePlay)
 
 		Local abt:TAboutRequester = New TAboutRequester
-		abt.initrequester(host,"{{about_window_title}}",ScaledSize(420),ScaledSize(277),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		abt.initrequester(host,"{{about_window_title}}",ScaledSize(460),ScaledSize(299),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 
 		Local win:TGadget = abt.window, w = ClientWidth(abt.window)-ScaledSize(12), h = ClientHeight(abt.window)
 
@@ -769,13 +769,13 @@ Type TAboutRequester Extends TRequester
 
 		Local tmpGadget:TGadget
 
-		For y = y Until (277-21) Step 22
+		For y = y Until (299-21) Step 22
 
 			tmpGadget = CreateLabel("",ScaledSize(6),ScaledSize(y),ScaledSize(135),ScaledSize(22),win,LABEL_LEFT)
 			SetGadgetLayout( tmpGadget, EDGE_ALIGNED, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_CENTERED )
 			abt.lblLeftAligned:+[tmpGadget]
 
-			tmpGadget = CreateLabel("",ScaledSize(135+6),ScaledSize(y),w-ScaledSize(135),ScaledSize(22),win,LABEL_LEFT)
+			tmpGadget = CreateLabel("",ScaledSize(135+6),ScaledSize(y),w-ScaledSize(175),ScaledSize(22),win,LABEL_LEFT)
 			SetGadgetLayout( tmpGadget, EDGE_RELATIVE, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED )
 			DelocalizeGadget tmpGadget
 			abt.lblRightAligned:+[tmpGadget]
