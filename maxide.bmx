@@ -683,9 +683,10 @@ Type TAboutRequester Extends TRequester
 		Local upxPath:String = BlitzMaxPath() + "/bin/upx"
 		?Win32
 		upxPath :+ ".exe"
+		upxPath = upxPath.Replace("/", "\")
 		?
 		If FileType(upxPath) = FILETYPE_FILE
-			Return GetProcessOutput(upxPath, "-V").Split("~n")[0]
+			Return GetProcessOutput(StripExt(upxPath), "-V").Split("~n")[0]
 		Else
 			Return LocalizeString("{{about_error_notapplicable}}")
 		EndIf
@@ -753,10 +754,10 @@ Type TAboutRequester Extends TRequester
 ?arm
 		arch = "ARM"
 ?
-		abt.lblTitle = CreateLabel(IDE_NAME + " " + IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
+		abt.lblTitle = CreateLabel(IDE_NAME + " " + IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblTitle, LookupGuiFont( GUIFONT_SYSTEM, 12, FONT_BOLD )
 		SetGadgetLayout abt.lblTitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
-		y:+21
+		y:+23
 		abt.lblSubtitle = CreateLabel("{{about_label_subtitle}}",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblSubtitle, LookupGuiFont( GUIFONT_SYSTEM, 10, FONT_ITALIC )
 		SetGadgetLayout abt.lblSubtitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
