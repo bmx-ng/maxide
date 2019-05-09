@@ -95,13 +95,10 @@ Const FileTypeFilters$="Code Files:"+FileTypes$+";All Files:*"
 Const HOMEPAGE$="/docs/html/index.html"
 
 ?MacOS
-Global SVNCMD$="/usr/local/bin/svn"
 Const LABELOFFSET=2
 ?Win32
-Global SVNCMD$="svn"
 Const LABELOFFSET=4
 ?Linux
-Global SVNCMD$="/usr/bin/svn"
 Const LABELOFFSET=0
 ?
 
@@ -148,7 +145,7 @@ Const MENUDEBUGENABLED=34
 Const MENUCOMMANDLINE=36
 Const MENUIMPORTBB=38
 Const MENUFINDINFILES=39
-Const MENUPROJECTMANAGER=40
+'unused/former project manager =40
 Const MENUSHOWCONSOLE=41
 Const MENUOPTIONS=42
 
@@ -2584,707 +2581,6 @@ Type TSearchRequester Extends TRequester
 	End Function
 End Type
 
-
-Type TProjectRequester Extends TRequester
-	Field	projects:TProjects
-	Field	listbox:TGadget
-	Field	add:TGadget
-	Field	remove:TGadget
-	Field	props:TGadget
-	Field	moveup:TGadget
-	Field	movedown:TGadget
-	Field	Current:TProjectFolderNode
-
-	Method Invoke(command,arg:Object=Null)
-		Select command
-		Case TOOLACTIVATE
-			Refresh
-		End Select
-	End Method
-
-	Method SetCurrent(i)
-		If i=-1
-			DisableGadget remove
-			DisableGadget moveup
-			DisableGadget movedown
-			DisableGadget props
-			Current=Null
-		Else
-			Current=TProjectFolderNode(GadgetItemExtra(listbox,i))
-			If Current
-				EnableGadget remove
-				EnableGadget props
-				EnableGadget moveup
-				EnableGadget movedown
-			EndIf
-		EndIf
-	End Method
-
-	Method Poll()
-		Local	index
-		Select EventSource()
-			Case window
-				If EventID()=EVENT_WINDOWCLOSE Then Hide()
-			Case add
-				If EventID() = EVENT_GADGETACTION Then
-					projects.NewProject
-					Refresh
-				EndIf
-			Case remove
-				If EventID() = EVENT_GADGETACTION Then
-					projects.RemoveProject SelectedGadgetItem(listbox)
-					Refresh
-				EndIf
-			Case cancel
-				If EventID() = EVENT_GADGETACTION Then Hide
-			Case props
-				If EventID() = EVENT_GADGETACTION And Current
-					host.projectprops.Open(Current)
-				EndIf
-			Case listbox
-				If EventID()=EVENT_GADGETSELECT
-					SetCurrent SelectedGadgetItem(listbox)	'EventData()
-				ElseIf EventID()=EVENT_GADGETACTION
-					SetCurrent SelectedGadgetItem(listbox)
-					host.projectprops.Open(Current)
-				EndIf
-			Case moveup
-				If EventID()=EVENT_GADGETACTION Then
-					index=projects.MoveProject(SelectedGadgetItem(listbox),-1)
-					Refresh
-					SelectGadgetItem listbox,index
-					SetCurrent(index)
-				EndIf
-			Case movedown
-				If EventID()=EVENT_GADGETACTION Then
-					index=projects.MoveProject(SelectedGadgetItem(listbox),1)
-					Refresh
-					SelectGadgetItem listbox,index
-					SetCurrent(index)
-				EndIf
-		End Select
-	End Method
-
-	Method Refresh()
-		ClearGadgetItems listbox
-		For Local node:TNode = EachIn projects.kids
-			If TFolderNode(node)'node.argument
-				AddGadgetItem listbox,node.name,0,-1,"",node
-			EndIf
-		Next
-		SetCurrent -1
-	End Method
-
-	Method Open(projnode:TProjects)
-		projects=projnode
-		Refresh
-		Show
-	End Method
-
-	Function Create:TProjectRequester(host:TCodePlay)
-		Local x,y
-		Local	proj:TProjectRequester = New TProjectRequester
-
-		proj.initrequester(host,"{{projman_window_title}}",ScaledSize(440),ScaledSize(188),STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		proj.listbox=CreateListBox( ScaledSize(6),ScaledSize(8),ScaledSize(244),ScaledSize(174),proj.window )
-
-		x=ClientWidth(proj.window)-ScaledSize(164)
-		proj.add=CreateButton("{{projman_btn_addproj}}",x,ScaledSize(8),ScaledSize(158),ScaledSize(26),proj.window)
-		proj.remove=CreateButton("{{projman_btn_delproj}}",x,ScaledSize(44),ScaledSize(158),ScaledSize(26),proj.window)
-
-		proj.moveup=CreateButton("{{projman_btn_moveup}}",x,ScaledSize(80),ScaledSize(158),ScaledSize(26),proj.window)
-		proj.movedown=CreateButton("{{projman_btn_movedn}}",x,ScaledSize(116),ScaledSize(158),ScaledSize(26),proj.window)
-
-		proj.props=CreateButton("{{projman_btn_properties}}",x,ScaledSize(152),ScaledSize(158),ScaledSize(26),proj.window)
-
-		DisableGadget proj.remove
-		DisableGadget proj.moveup
-		DisableGadget proj.movedown
-		DisableGadget proj.props
-		Return proj
-	End Function
-End Type
-
-Type TProjectProperties Extends TRequester
-	Field proj:TProjectFolderNode
-	Field newproj:Int = False				'If 'True' then cancel/close deletes project.
-	Field localname:TGadget
-	Field localpath:TGadget
-	Field pathbutton:TGadget
-	Field path:TGadget
-	Field user:TGadget
-	Field password:TGadget
-	Field checkout:TGadget
-'	Field update:TGadget
-'	Field commit:TGadget
-	Field poprequester:TRequester	'hack for restoring to projectmanager requester
-	Field dirty
-
-	Method Invoke(command,arg:Object=Null)
-		Select command
-		Case TOOLACTIVATE
-			Refresh
-		End Select
-	End Method
-
-	Method Tidy()
-		newproj = False
-		If dirty
-			proj.Set GadgetText(localname),GadgetText(localpath),GadgetText(path),GadgetText(user),GadgetText(password)
-			dirty=False
-		EndIf
-	End Method
-
-	Method Poll()
-		If (EventID() <> EVENT_GADGETACTION) And (EventID() <> EVENT_WINDOWCLOSE) Then Return
-		Select EventSource()
-			Case localname,localpath,path,user,password
-				dirty=True
-			Case pathbutton
-				Local dir$=RequestDir(LocalizeString("{{project_requestfolder_title}}"))
-				If dir
-					If dir[dir.length-1..]="/"	'fltk hack
-						dir=dir[..dir.length-1]
-					EndIf
-					SetGadgetText localpath,dir
-					If GadgetText(localname)=""
-						SetGadgetText localname,StripDir(dir)
-					EndIf
-					dirty=True
-				EndIf
-			Case checkout
-				Tidy()
-				Hide()
-				proj.CheckoutVersion()
-Rem
-			Case commit
-				Tidy
-				Hide
-				proj.CommitVersion
-			Case update
-				Tidy
-				Hide
-				proj.UpdateVersion
-EndRem
-			Case ok
-				Tidy()
-				Hide()
-			Case cancel
-				Hide()
-			Case window
-				If EventID()=EVENT_WINDOWCLOSE
-					Hide()
-				EndIf
-		End Select
-	End Method
-
-	Method Hide()
-		If proj And newproj Then proj.Free()
-		EnableGadget host.window
-		HideGadget window
-		host.UnhookRequester Self'poprequester
-		If poprequester poprequester.Show
-	End Method
-
-	Method Refresh()
-		SetGadgetText localname,proj.name
-		SetGadgetText localpath,proj.path
-		SetGadgetText path,proj.svnpath
-		SetGadgetText user,proj.svnuser
-		SetGadgetText password,proj.svnpass
-	End Method
-
-	Method Open(projnode:TProjectFolderNode, newproject:Int = False)
-		newproj=newproject
-		proj=projnode
-		Refresh()
-		Show()
-	End Method
-
-	Function Create:TProjectProperties(host:TCodePlay)
-		Local	proj:TProjectProperties = New TProjectProperties
-		proj.initrequester(host,"{{project_window_title}}",ScaledSize(480),ScaledSize(250),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
-		proj.modal = True
-
-		Local projectdetails:TGadget = CreatePanel(ScaledSize(6),ScaledSize(8),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(85),proj.window,PANEL_GROUP,"{{project_group_details}}")
-
-		Local i,n,y
-		y=4
-
-		CreateLabel("{{project_label_name}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
-		proj.localname=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+6),ScaledSize(21),projectdetails)
-'		proj.pathbutton=CreateButton("..",434,y,34,28,projectdetails)
-		y:+30
-
-		CreateLabel("{{project_label_path}}:",ScaledSize(8),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
-		proj.localpath=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+34+6+6),ScaledSize(21),projectdetails)
-		proj.pathbutton=CreateButton("..",ClientWidth(projectdetails)-ScaledSize(34+6),ScaledSize(y-3),ScaledSize(34),ScaledSize(26),projectdetails)
-		y:+30
-
-
-		Local svnbox:TGadget = CreatePanel(ScaledSize(6),ScaledSize(101),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(144),proj.window,PANEL_GROUP,"{{project_group_svn}}")
-		y=4
-		CreateLabel("{{project_label_url}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.path=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
-		y:+30
-		CreateLabel("{{project_label_username}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.user=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
-		y:+30
-		CreateLabel("{{project_label_password}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.password=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox,TEXTFIELD_PASSWORD)
-		y:+30
-		proj.checkout=CreateButton("{{project_btn_checkout}}",ClientWidth(svnbox)-ScaledSize(154),ClientHeight(svnbox)-ScaledSize(32),ScaledSize(150),ScaledSize(28),svnbox)
-'		proj.update=CreateButton("{{project_btn_update}}",180,y+10,150,28,svnbox)
-'		proj.commit=CreateButton("{{project_btn_commit}}",340,y+10,150,28,svnbox)
-		y:+40
-
-		Return proj
-	End Function
-End Type
-
-Function GetInfo$(a$ Var)
-	Local p,r$
-	p=a.Find("|")+1
-	If p=0 p=a.length+1
-	r$=a$[..p-1]
-	a$=a$[p..]
-	Return r$
-End Function
-
-Type TFolderNode Extends TNode
-	Field	owner:TNode
-	Field	path$
-	Field	scanned
-	Field	version
-	Field	foldertype
-
-	Const PROJECTFOLDER=0
-	Const DIRECTORYFOLDER=1
-	Const FILEFOLDER=2
-
-	Method FindFolderFromPath:TFolderNode(dir$)
-		Local result:TFolderNode
-		If path=dir Return Self
-		For Local folder:TFolderNode = EachIn kids
-			result=folder.FindFolderFromPath(dir)
-			If result Return result
-		Next
-	End Method
-
-	Method SetName(n$)
-		If version Then n:+"("+version+")"
-		Super.SetName( n )
-		Refresh
-	End Method
-
-	Method SetVersion(ver)
-		version=ver
-		SetName StripDir(path)
-	End Method
-
-	Method Write(stream:TStream)
-		Local isopen
-		If GetState()=OPENSTATE isopen=True
-		If version Or isopen
-			stream.WriteLine "proj_data="+path+"|"+isopen+"|"+version+"|"
-		EndIf
-		For Local folder:TFolderNode = EachIn kids
-			folder.Write(stream)
-		Next
-	End Method
-
-	Method ProjectHost:TCodePlay()
-		Local n:TNode = Self
-		While n
-			If TProjects(n) Return TProjects(n).host
-			n=n.parent
-		Wend
-	End Method
-
-	Method ProjectNode:TProjectFolderNode()
-		Local n:TNode = Self
-		While n
-			If TProjectFolderNode(n) Return TProjectFolderNode(n)
-			n=n.parent
-		Wend
-	End Method
-
-	Method RunSVN(cmd$,about$,refresh)
-
-		Local host:TCodePlay = ProjectHost()
-		If Not host Notify LocalizeString("{{svn_notification_nodehostnotfound}}");Return
-
-		Local project:TProjectFolderNode = ProjectNode()
-		If Not project Notify LocalizeString("{{svn_notification_nodeprojectnotfound}}");Return
-
-		If project.svnuser
-			cmd:+" --username "+project.svnuser
-			If project.svnpass cmd:+" --password "+project.svnpass
-		EndIf
-
-		If refresh
-			host.execute cmd,about,MENUREFRESH,True,Self
-		Else
-			host.execute cmd,about,0,0,Self
-		EndIf
-	End Method
-
-	Method UpdateVersion()
-		Local cmd$=svncmd+" update"
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_updating}}").Replace("%1",path),True
-	End Method
-
-	Method CommitVersion()
-		Local cmd$=svncmd+" commit"
-		cmd:+" -m ~qmy comment~q"
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_committing}}").Replace("%1",path),False
-	End Method
-
-	Method Open(view=-1)
-		Update(True)
-		Super.Open view
-	End Method
-
-	Method AddFileNode:TNode(file$)
-		Local	n:TNode
-		Local ext$
-		If (","+FileTypes+",").Contains(","+ExtractExt(file).toLower()+",") Then
-			n=AddNode(StripDir(file))
-			n.SetAction(owner,TOOLOPEN,file)
-			ext=ExtractExt(file$).ToLower()
-			n.sortname=ext+n.name
-			Return n
-		EndIf
-	End Method
-
-	Method AddFolderNode:TNode(path$)
-		Local	n:TFolderNode = TFolderNode.CreateFolderNode(path,DIRECTORYFOLDER)
-		n.owner = owner
-		n.sortname=" "+n.name
-		Append n
-		Return n
-	End Method
-
-	Method Scan(o:TNode)
-		Local p$
-		Local flist:TList = New TList
-
-		owner=o
-
-		For Local f$ = EachIn LoadDir(path,True)
-			If f[..1] = "." Then Continue
-			p$=path+"/"+f
-			Select FileType(p$)
-				Case FILETYPE_FILE
-					AddFileNode p$
-				Case FILETYPE_DIR
-					AddFolderNode p$
-			End Select
-		Next
-
-		SortKids
-		scanned = True
-
-	End Method
-
-	Method ScanKids()
-		For Local f:TFolderNode = EachIn kids
-			f.owner = owner
-			f.Update(False)
-		Next
-	End Method
-
-	Method Rescan()
-		scanned = False
-		Update()
-	EndMethod
-
-	Method Update( alwaysScanKids:Int = False )
-		If Not scanned Then
-			FreeKids()
-			Scan owner
-		EndIf
-		If alwaysScanKids Or Not IsHidden() Then ScanKids()
-		Refresh()
-	End Method
-
-	Method Invoke(command,argument:Object=Null)
-		Local host:TCodePlay
-		Local cmd,p
-		Local line$
-
-		host=ProjectHost()
-		If Not host Notify LocalizeString("{{svn_notification_nodehostnotfound}}");Return
-
-		Select command
-		Case TOOLOUTPUT
-			line$=String(argument)
-			p=line.find(" revision ")
-			If p>-1
-				SetVersion Int(line[p+10..])
-			EndIf
-'			If line[..12]="At revision "
-'			DebugLog "TOOLOUTPUT:"+line
-			Return
-		Case TOOLERROR
-			line$=String(argument)
-'			DebugLog "TOOLERROR:"+line
-			Return
-		Case TOOLMENU
-			cmd=Int(String(argument))
-			Select cmd
-			Case 0		'special toolmenu-command=0 fired by rightbutton node context
-				Highlight
-				Local menu:TGadget
-				menu=host.projects.projmenu
-				PopupWindowMenu host.window,menu,Self
-			Case MENUREFRESH
-				Rescan()
-			Case MENUBROWSE
-				OpenURL RealPath(path)
-			Case MENUSHELL
-				Local cd$=CurrentDir()
-				ChangeDir RealPath(path)
-?MacOS
-				host.execute "/bin/bash","Shell Terminal"
-?Linux
-				host.execute "/bin/bash","Shell Terminal"
-?Win32
-				host.execute "cmd","Shell Terminal - Type Exit To End"
-?
-				ChangeDir cd
-			Case MENUUPDATE
-				UpdateVersion
-			Case MENUCOMMIT
-				CommitVersion
-'			Case MENUPROPS
-'				host.projectprops.Open(Self)
-			Case MENUFINDINFILES
-				host.searchreq.ShowWithPath( RealPath(path) )
-			End Select
-		End Select
-	End Method
-
-	Function CreateFolderNode:TFolderNode(path$,foldertype)
-		Local	n:TFolderNode = New TFolderNode
-'		n.host=host
-		n.SetName( StripDir(path) )
-		n.path = path
-		n.foldertype = foldertype
-		Return n
-	End Function
-End Type
-
-Type TProjectFolderNode Extends TFolderNode
-
-	Field owner:TProjects
-	Field svnpath$,svnuser$,svnpass$,svnversion
-	Field svnerr$
-
-	Method CheckoutVersion()	'to do - needs to move old version to temp?
-		Local cmd$ = svncmd+" checkout"
-		cmd:+" "+quote(svnpath)
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_checkingout}}").Replace("%1",svnpath).Replace("%2",path),True
-	End Method
-
-	Function Crypt$(a$)
-		Local b$,c
-		For Local i:Int = 0 Until a.length
-			c=a[i]
-			If c>31 c:~((i*-5)&31)
-			b:+Chr(c&255)
-		Next
-		Return b
-	End Function
-
-	Method ToString$()
-		Local prj$
-		Local isopen
-		If GetState()&OPENSTATE isopen=True
-		prj=name+"|"+path+"|"+svnpath+"|"+svnuser+"|"+crypt(svnpass)+"|"+isopen+"|"+version
-		Return prj
-	End Method
-
-	Method Write(stream:TStream)
-		stream.WriteLine "proj_node="+ToString()
-		For Local folder:TFolderNode = EachIn kids
-			folder.Write(stream)
-		Next
-	End Method
-
-	Method FromString(info$)
-		Local n$ = GetInfo(info)
-		If Not n Then n = "Unknown"
-		SetName( n )
-		path=GetInfo(info)
-		If path path=owner.host.FullPath(path)
-		svnpath=GetInfo(info)
-		svnuser=GetInfo(info)
-		svnpass=GetInfo(info)
-		Scan(owner)
-		Local isopen,vers
-		isopen=Int(GetInfo(info))
-		If isopen
-			Open
-		EndIf
-		vers=Int(GetInfo(info))
-		If vers
-			SetVersion vers
-		EndIf
-	End Method
-
-	Method Invoke(command,argument:Object=Null)
-		Local cmd
-		Select command
-		Case TOOLMENU
-			cmd=Int(String(argument))
-			Select cmd
-			Case MENUPROPS
-				Return owner.host.projectprops.Open(Self)
-			End Select
-		End Select
-		Return Super.Invoke(command,argument)
-	End Method
-
-	Method Set(n$,p$,s$,user$,pass$)
-		path=owner.host.FullPath(p)
-		setname n
-		svnpath=s
-		svnuser=user
-		svnpass=pass
-		Rescan()
-		owner.host.projectreq.Refresh()
-	End Method
-
-	Function CreateProjectNode:TProjectFolderNode(projects:TProjects,info$)
-		Local n:TProjectFolderNode = New TProjectFolderNode
-		n.owner=projects
-		n.FromString(info)
-		n.foldertype=PROJECTFOLDER
-		Return n
-	End Function
-End Type
-
-Type TProjects Extends TNode
-	Field host:TCodePlay
-	Field addproj:TNode
-	Field projmenu:TGadget
-	Field projmenuprops:TGadget
-
-	Method RemoveProject(index)
-		Local	node:TNode
-		If index<0 Or index>=kids.Count() Return
-		node=TNode(kids.ValueAtIndex(index))
-		If node node.Free
-		Refresh
-	End Method
-
-	Method MoveProject(index,dir)
-		Local node:TNode
-		Local link:TLink
-		If index<0 Or index>=kids.Count() Return index
-		node=TNode(kids.ValueAtIndex(index))
-		If node
-			addproj.Detach
-			node.Hide
-			link=kids.FindLink(node)
-			If dir>0
-				If link link=link._succ
-				If link
-					kids.Remove node
-					kids.InsertAfterLink node,link
-					index:+1
-				EndIf
-			Else
-				If link link=link._pred
-				If link
-					kids.Remove node
-					kids.InsertBeforeLink node,link
-					index:-1
-				EndIf
-			EndIf
-			Append addproj
-			Refresh
-		EndIf
-		Return index
-	End Method
-
-	Method NewProject()
-		addproj.Detach
-		Local proj:TProjectFolderNode = TProjectFolderNode.CreateProjectNode(Self,LocalizeString("{{project_defaultname}}"))
-'		proj.scan(Self)
-		Append proj
-		Append addproj
-		host.projectprops.Open(proj, True)
-		Refresh
-	End Method
-
-	Method AddProject(data:TList)
-		Local project:TProjectFolderNode
-		Local folder:TFolderNode
-		For Local info$ = EachIn data
-			If Not project
-				addproj.Detach
-				project=TProjectFolderNode.CreateProjectNode(Self,info)
-				Append project
-				Append addproj
-				Refresh
-			Else
-				Local path$
-				Local popen
-				Local pversion
-				path=GetInfo(info)
-				popen=Int(GetInfo(info))
-				pversion=Int(GetInfo(info))
-				folder=project.FindFolderFromPath(path)
-				If folder
-					folder.SetVersion pversion
-					folder.ReScan()
-					If popen Then folder.Open()
-				EndIf
-			EndIf
-		Next
-	End Method
-
-	Method Write(stream:TStream)
-		For Local project:TProjectFolderNode = EachIn kids
-			project.Write(stream)
-		Next
-	End Method
-
-	Method Invoke(command,argument:Object=Null)
-		Select command
-		Case TOOLNEW
-			NewProject
-		Case TOOLOPEN
-			host.OpenSource String(argument)
-		End Select
-	End Method
-
-	Function CreateProjects:TProjects(host:TCodePlay)
-		Local p:TProjects = New TProjects
-		p.SetName("{{navnode_projects}}")
-		p.host=host
-		p.addproj=p.AddNode("{{navnode_addproject}}")
-		p.addproj.SetAction p,TOOLNEW
-
-		p.projmenu=CreateMenu("{{popup_nav_proj}}",0,Null)
-		CreateMenu "{{popup_nav_proj_refresh}}",MENUREFRESH,p.projmenu
-		CreateMenu "{{popup_nav_proj_findinfiles}}",MENUFINDINFILES,p.projmenu
-		CreateMenu "{{popup_nav_proj_explore}}",MENUBROWSE,p.projmenu
-		CreateMenu "{{popup_nav_proj_shell}}",MENUSHELL,p.projmenu
-		CreateMenu "",0,p.projmenu
-		CreateMenu "{{popup_nav_proj_svnupdate}}",MENUUPDATE,p.projmenu
-		CreateMenu "{{popup_nav_proj_svncommit}}",MENUCOMMIT,p.projmenu
-		CreateMenu "",0,p.projmenu
-		p.projmenuprops=CreateMenu("{{popup_nav_proj_properties}}",MENUPROPS,p.projmenu)
-		host.projectreq.projects=p
-		Return p
-	End Function
-End Type
 
 ?Not bmxng
 Type TByteBuffer Extends TStream
@@ -5786,8 +5082,6 @@ Type TCodePlay
 	Field options:TOptionsRequester
 '	Field progress:TProgressRequester
 	Field activerequesters:TList = New TList
-	Field projectreq:TProjectRequester
-	Field projectprops:TProjectProperties
 	Field searchreq:TSearchRequester
 	Field aboutreq:TAboutRequester
 
@@ -5799,7 +5093,6 @@ Type TCodePlay
 
 	Field root:TNode
 	Field helproot:TNode
-	Field projects:TProjects
 	Field coderoot:TNode
 	Field navbar:TNavBar
 
@@ -5827,7 +5120,6 @@ Type TCodePlay
 	Field recentmenus:TGadget[]
 	Field openlist:TList=New TList
 	Field openlock$
-	Field projlist:TList=New TList
 	Field winsize:TRect=New TRect
 	Field winmax,tooly,splitpos,debugview,navtab
 	Field progress,splitorientation
@@ -5943,12 +5235,6 @@ Type TCodePlay
 		If path[..bmxpath.length+5]=bmxpath+"/tmp/" Return True
 	End Method
 
-	Method AddDefaultProj(p$)
-		Local projdata:TList = New TList
-		projdata.AddLast p
-		projlist.AddLast projdata
-	End Method
-
 	Method ReadConfig()
 		Local	stream:TStream
 		Local	f$,p,a$,b$
@@ -5993,15 +5279,10 @@ Type TCodePlay
 ' read ini
 		stream=ReadFile(bmxpath+"/cfg/ide.ini")
 		If Not stream
-			AddDefaultProj "Samples|samples"
-			AddDefaultProj "Modules Source|mod"
-			AddDefaultProj "BlitzMax Source|src"
 			Return
 		EndIf
 		options.Read(stream)
 		options.Snapshot
-
-		Local projdata:TList
 
 		While Not stream.Eof()
 			f$=stream.ReadLine()
@@ -6068,12 +5349,6 @@ Type TCodePlay
 					splitpos=Int(b$)
 				Case "split_orientation"
 					splitorientation=Int(b$)
-				Case "proj_node"
-					projdata=New TList
-					projdata.AddLast b
-					projlist.AddLast projdata
-				Case "proj_data"
-					If projdata projdata.AddLast b
 				Case "appstub"
 					selectedappstub = b
 			End Select
@@ -6147,7 +5422,6 @@ Type TCodePlay
 				If f$ And Not IsTempPath(f$) stream.WriteLine "file_open="+f$
 			EndIf
 		Next
-		projects.write(stream)
 		stream.close
 	End Method
 
@@ -6671,8 +5945,6 @@ Type TCodePlay
 		replacereq=TReplaceRequester.Create(Self)
 		options=TOptionsRequester.Create(Self)
 '		progress=TProgressRequester.Create(Self)
-		projectreq=TProjectRequester.Create(Self)
-		projectprops=TProjectProperties.Create(Self)
 		searchreq=TSearchRequester.Create(Self)
 		aboutreq=TAboutRequester.Create(Self)
 
@@ -6747,9 +6019,6 @@ Type TCodePlay
 
 		helproot=root.AddNode("{{navnode_help}}")
 
-		projects=TProjects.CreateProjects(Self)
-		root.Append projects
-
 '		opencoderoot=root.AddNode("Open")
 		coderoot=TNode.CreateNode("{{navtab_code}}")
 		coderoot.Open()
@@ -6762,7 +6031,6 @@ Type TCodePlay
 		navbar.SelectView 0
 
 		helproot.Open
-		projects.Open
 
 		AddHandler navbar
 
@@ -6792,13 +6060,6 @@ Type TCodePlay
 		EndIf
 
 		helppanel.Home()
-
-		UpdateProgBar progress, 0.5;PollSystem
-
-' scan projects in projlist
-		For Local pdata:TList = EachIn projlist
-			projects.AddProject pdata
-		Next
 
 		UpdateProgBar progress, 0.6;PollSystem
 
@@ -6929,7 +6190,6 @@ Type TCodePlay
 		CreateMenu "{{menu_file_importbb}}",MENUIMPORTBB,file
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_ideoptions}}",MENUOPTIONS,file
-		CreateMenu "{{menu_file_projectmanager}}",MENUPROJECTMANAGER,file
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_print}}",MENUPRINT,file,KEY_P,MENUMOD
 ?Not MacOS
@@ -7412,8 +6672,6 @@ Type TCodePlay
 			Case MENUFINDINFILES
 				If activepanel Then searchreq.ShowWithPath( ExtractDir(activepanel.path) ) Else searchreq.Show()
 
-			Case MENUPROJECTMANAGER
-				projectreq.Open projects
 			Case MENUSHOWCONSOLE
 				If output Then output.Open()
 
