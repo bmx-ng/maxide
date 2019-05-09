@@ -95,13 +95,10 @@ Const FileTypeFilters$="Code Files:"+FileTypes$+";All Files:*"
 Const HOMEPAGE$="/docs/html/index.html"
 
 ?MacOS
-Global SVNCMD$="/usr/local/bin/svn"
 Const LABELOFFSET=2
 ?Win32
-Global SVNCMD$="svn"
 Const LABELOFFSET=4
 ?Linux
-Global SVNCMD$="/usr/bin/svn"
 Const LABELOFFSET=0
 ?
 
@@ -393,7 +390,7 @@ Type TRequester
 	Field	centered, modal
 
 	Method initrequester(owner:TCodeplay,label$,w=260,h=60,flags=STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER,oktext$="{{btn_ok}}")
-
+		local buttonPadding:int = 7
 		host=owner
 		If (flags&STYLE_MODAL) Then flags:|STYLE_STDBORDER
 
@@ -413,23 +410,23 @@ Type TRequester
 
 		If (flags & STYLE_OK) Then
 
-			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(111),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
+			ok=CreateButton(oktext,ClientWidth(window)-ScaledSize(95+buttonPadding),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_OK)
 			SetGadgetLayout(ok,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 
 			If (flags & STYLE_CANCEL) Then
-				cancel=CreateButton("{{btn_cancel}}",ScaledSize(6),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
+				cancel=CreateButton("{{btn_cancel}}",ScaledSize(buttonPadding),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_ALIGNED,EDGE_CENTERED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 
 		Else
 			If (flags & STYLE_CANCEL) Then
-				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(111),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
+				cancel=CreateButton("{{btn_close}}",ClientWidth(window)-ScaledSize(95+buttonPadding),ClientHeight(window)-ScaledSize(32),ScaledSize(95),ScaledSize(26),window,BUTTON_CANCEL)
 				SetGadgetLayout(cancel,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 			EndIf
 		EndIf
 
 		If (flags & STYLE_DIVIDER) And (flags & (STYLE_OK|STYLE_CANCEL)) Then
-			divider = CreateLabel( "", ScaledSize(6), ClientHeight(window)-ScaledSize(42), ClientWidth(window)-ScaledSize(12), ScaledSize(4), window, LABEL_SEPARATOR )
+			divider = CreateLabel( "", ScaledSize(buttonPadding), ClientHeight(window)-ScaledSize(42), ClientWidth(window)-ScaledSize(12), ScaledSize(4), window, LABEL_SEPARATOR )
 			SetGadgetLayout(divider,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED)
 		EndIf
 
@@ -2563,22 +2560,22 @@ Type TSearchRequester Extends TRequester
 		search.findbox=CreateTextField(ScaledSize(103),ScaledSize(8),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(21),search.window);SetGadgetLayout(search.findbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 
 
-		SetGadgetLayout(CreateLabel("{{search_label_filetypes}}:",ScaledSize(6),ScaledSize(42),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
+		SetGadgetLayout(CreateLabel("{{search_label_filetypes}}:",ScaledSize(6),ScaledSize(38+4),ScaledSize(95),ScaledSize(24),search.window),EDGE_ALIGNED,EDGE_CENTERED,EDGE_ALIGNED,EDGE_CENTERED)
 		search.typebox=CreateComboBox(ScaledSize(103),ScaledSize(38),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(24),search.window);SetGadgetLayout(search.typebox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 
 		AddGadgetItem( search.typebox, "{{search_type_bmaxfiles}}",GADGETITEM_DEFAULT|GADGETITEM_LOCALIZED,-1,"*.bmx" )
 		AddGadgetItem( search.typebox, "{{search_type_codefiles}}",GADGETITEM_LOCALIZED,-1,fileTypes )
 		AddGadgetItem( search.typebox, "{{search_type_allfiles}}",GADGETITEM_LOCALIZED,-1,"*")
 
-		SetGadgetLayout(CreateLabel("{{search_label_searchpath}}:",ScaledSize(6),ScaledSize(72),ScaledSize(95),ScaledSize(48),search.window),1,0,1,0)
-		search.pathbox=CreateTextField(ScaledSize(103),ScaledSize(68),ClientWidth(search.window)-ScaledSize(103+6+30+6),ScaledSize(21),search.window);SetGadgetLayout(search.pathbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
-		search.pathbutton=CreateButton("..",ClientWidth(search.window)-ScaledSize(34+6),ScaledSize(65),ScaledSize(34),ScaledSize(26),search.window);SetGadgetLayout(search.pathbutton,EDGE_CENTERED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		SetGadgetLayout(CreateLabel("{{search_label_searchpath}}:",ScaledSize(6),ScaledSize(68+4),ScaledSize(95),ScaledSize(24),search.window),1,0,1,0)
+		search.pathbox=CreateTextField(ScaledSize(103),ScaledSize(68),ClientWidth(search.window)-ScaledSize(103+6+30+6+6+6),ScaledSize(21),search.window);SetGadgetLayout(search.pathbox,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
+		search.pathbutton=CreateButton("..",ClientWidth(search.window)-ScaledSize(34+6+6),ScaledSize(68),ScaledSize(34),ScaledSize(21),search.window);SetGadgetLayout(search.pathbutton,EDGE_CENTERED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetGadgetText(search.pathbox, CurrentDir())
 
 		search.pathsubdir=CreateButton("{{search_btn_searchsubfolders}}",ScaledSize(103),ScaledSize(98),ClientWidth(search.window)-ScaledSize(103+6),ScaledSize(20),search.window,BUTTON_CHECKBOX);SetGadgetLayout(search.pathsubdir,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_CENTERED)
 		SetButtonState(search.pathsubdir,True)
 
-		search.results=CreateListBox(ScaledSize(6),ScaledSize(128),ClientWidth(search.window)-ScaledSize(12),ScaledSize(280-(128+6)),search.window);SetGadgetLayout(search.results,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
+		search.results=CreateListBox(ScaledSize(8),ScaledSize(128),ClientWidth(search.window)-ScaledSize(16),ScaledSize(280-(128+6)),search.window);SetGadgetLayout(search.results,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED,EDGE_ALIGNED)
 
 		Return search
 	End Function
@@ -2711,12 +2708,6 @@ Type TProjectProperties Extends TRequester
 	Field localname:TGadget
 	Field localpath:TGadget
 	Field pathbutton:TGadget
-	Field path:TGadget
-	Field user:TGadget
-	Field password:TGadget
-	Field checkout:TGadget
-'	Field update:TGadget
-'	Field commit:TGadget
 	Field poprequester:TRequester	'hack for restoring to projectmanager requester
 	Field dirty
 
@@ -2730,7 +2721,7 @@ Type TProjectProperties Extends TRequester
 	Method Tidy()
 		newproj = False
 		If dirty
-			proj.Set GadgetText(localname),GadgetText(localpath),GadgetText(path),GadgetText(user),GadgetText(password)
+			proj.Set GadgetText(localname),GadgetText(localpath)
 			dirty=False
 		EndIf
 	End Method
@@ -2738,7 +2729,7 @@ Type TProjectProperties Extends TRequester
 	Method Poll()
 		If (EventID() <> EVENT_GADGETACTION) And (EventID() <> EVENT_WINDOWCLOSE) Then Return
 		Select EventSource()
-			Case localname,localpath,path,user,password
+			Case localname,localpath
 				dirty=True
 			Case pathbutton
 				Local dir$=RequestDir(LocalizeString("{{project_requestfolder_title}}"))
@@ -2752,20 +2743,6 @@ Type TProjectProperties Extends TRequester
 					EndIf
 					dirty=True
 				EndIf
-			Case checkout
-				Tidy()
-				Hide()
-				proj.CheckoutVersion()
-Rem
-			Case commit
-				Tidy
-				Hide
-				proj.CommitVersion
-			Case update
-				Tidy
-				Hide
-				proj.UpdateVersion
-EndRem
 			Case ok
 				Tidy()
 				Hide()
@@ -2789,9 +2766,6 @@ EndRem
 	Method Refresh()
 		SetGadgetText localname,proj.name
 		SetGadgetText localpath,proj.path
-		SetGadgetText path,proj.svnpath
-		SetGadgetText user,proj.svnuser
-		SetGadgetText password,proj.svnpass
 	End Method
 
 	Method Open(projnode:TProjectFolderNode, newproject:Int = False)
@@ -2803,7 +2777,7 @@ EndRem
 
 	Function Create:TProjectProperties(host:TCodePlay)
 		Local	proj:TProjectProperties = New TProjectProperties
-		proj.initrequester(host,"{{project_window_title}}",ScaledSize(480),ScaledSize(250),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
+		proj.initrequester(host,"{{project_window_title}}",ScaledSize(480),ScaledSize(110),STYLE_OK|STYLE_CANCEL|STYLE_DIVIDER|STYLE_MODAL)
 		proj.modal = True
 
 		Local projectdetails:TGadget = CreatePanel(ScaledSize(6),ScaledSize(8),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(85),proj.window,PANEL_GROUP,"{{project_group_details}}")
@@ -2813,30 +2787,11 @@ EndRem
 
 		CreateLabel("{{project_label_name}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
 		proj.localname=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+6),ScaledSize(21),projectdetails)
-'		proj.pathbutton=CreateButton("..",434,y,34,28,projectdetails)
 		y:+30
 
-		CreateLabel("{{project_label_path}}:",ScaledSize(8),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
-		proj.localpath=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+34+6+6),ScaledSize(21),projectdetails)
-		proj.pathbutton=CreateButton("..",ClientWidth(projectdetails)-ScaledSize(34+6),ScaledSize(y-3),ScaledSize(34),ScaledSize(26),projectdetails)
-		y:+30
-
-
-		Local svnbox:TGadget = CreatePanel(ScaledSize(6),ScaledSize(101),ClientWidth(proj.window)-ScaledSize(12),ScaledSize(144),proj.window,PANEL_GROUP,"{{project_group_svn}}")
-		y=4
-		CreateLabel("{{project_label_url}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.path=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
-		y:+30
-		CreateLabel("{{project_label_username}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.user=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox)
-		y:+30
-		CreateLabel("{{project_label_password}}:",ScaledSize(8),ScaledSize(y+LABELOFFSET),ScaledSize(72),ScaledSize(24),svnbox)
-		proj.password=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(svnbox)-ScaledSize(92),ScaledSize(21),svnbox,TEXTFIELD_PASSWORD)
-		y:+30
-		proj.checkout=CreateButton("{{project_btn_checkout}}",ClientWidth(svnbox)-ScaledSize(154),ClientHeight(svnbox)-ScaledSize(32),ScaledSize(150),ScaledSize(28),svnbox)
-'		proj.update=CreateButton("{{project_btn_update}}",180,y+10,150,28,svnbox)
-'		proj.commit=CreateButton("{{project_btn_commit}}",340,y+10,150,28,svnbox)
-		y:+40
+		CreateLabel("{{project_label_path}}:",ScaledSize(6),ScaledSize(y+4),ScaledSize(72),ScaledSize(24),projectdetails)
+		proj.localpath=CreateTextField(ScaledSize(88),ScaledSize(y),ClientWidth(projectdetails)-ScaledSize(88+34+6+6+6),ScaledSize(21),projectdetails)
+		proj.pathbutton=CreateButton("..",ClientWidth(projectdetails)-ScaledSize(34+6+6),ScaledSize(y),ScaledSize(34),ScaledSize(21),projectdetails)
 
 		Return proj
 	End Function
@@ -2907,39 +2862,6 @@ Type TFolderNode Extends TNode
 			If TProjectFolderNode(n) Return TProjectFolderNode(n)
 			n=n.parent
 		Wend
-	End Method
-
-	Method RunSVN(cmd$,about$,refresh)
-
-		Local host:TCodePlay = ProjectHost()
-		If Not host Notify LocalizeString("{{svn_notification_nodehostnotfound}}");Return
-
-		Local project:TProjectFolderNode = ProjectNode()
-		If Not project Notify LocalizeString("{{svn_notification_nodeprojectnotfound}}");Return
-
-		If project.svnuser
-			cmd:+" --username "+project.svnuser
-			If project.svnpass cmd:+" --password "+project.svnpass
-		EndIf
-
-		If refresh
-			host.execute cmd,about,MENUREFRESH,True,Self
-		Else
-			host.execute cmd,about,0,0,Self
-		EndIf
-	End Method
-
-	Method UpdateVersion()
-		Local cmd$=svncmd+" update"
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_updating}}").Replace("%1",path),True
-	End Method
-
-	Method CommitVersion()
-		Local cmd$=svncmd+" commit"
-		cmd:+" -m ~qmy comment~q"
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_committing}}").Replace("%1",path),False
 	End Method
 
 	Method Open(view=-1)
@@ -3055,10 +2977,6 @@ Type TFolderNode Extends TNode
 				host.execute "cmd","Shell Terminal - Type Exit To End"
 ?
 				ChangeDir cd
-			Case MENUUPDATE
-				UpdateVersion
-			Case MENUCOMMIT
-				CommitVersion
 '			Case MENUPROPS
 '				host.projectprops.Open(Self)
 			Case MENUFINDINFILES
@@ -3080,31 +2998,13 @@ End Type
 Type TProjectFolderNode Extends TFolderNode
 
 	Field owner:TProjects
-	Field svnpath$,svnuser$,svnpass$,svnversion
-	Field svnerr$
-
-	Method CheckoutVersion()	'to do - needs to move old version to temp?
-		Local cmd$ = svncmd+" checkout"
-		cmd:+" "+quote(svnpath)
-		cmd:+" "+quote(path)
-		RunSVN cmd,LocalizeString("{{svn_msg_checkingout}}").Replace("%1",svnpath).Replace("%2",path),True
-	End Method
-
-	Function Crypt$(a$)
-		Local b$,c
-		For Local i:Int = 0 Until a.length
-			c=a[i]
-			If c>31 c:~((i*-5)&31)
-			b:+Chr(c&255)
-		Next
-		Return b
-	End Function
 
 	Method ToString$()
 		Local prj$
 		Local isopen
 		If GetState()&OPENSTATE isopen=True
-		prj=name+"|"+path+"|"+svnpath+"|"+svnuser+"|"+crypt(svnpass)+"|"+isopen+"|"+version
+		'for compatibility issues we enter blank values for 3 svn details
+		prj=name+"|"+path+"| | | |"+isopen+"|"+version
 		Return prj
 	End Method
 
@@ -3121,9 +3021,11 @@ Type TProjectFolderNode Extends TFolderNode
 		SetName( n )
 		path=GetInfo(info)
 		If path path=owner.host.FullPath(path)
-		svnpath=GetInfo(info)
-		svnuser=GetInfo(info)
-		svnpass=GetInfo(info)
+		'unused 3 values
+		GetInfo(info)
+		GetInfo(info)
+		GetInfo(info)
+		
 		Scan(owner)
 		Local isopen,vers
 		isopen=Int(GetInfo(info))
@@ -3149,12 +3051,9 @@ Type TProjectFolderNode Extends TFolderNode
 		Return Super.Invoke(command,argument)
 	End Method
 
-	Method Set(n$,p$,s$,user$,pass$)
+	Method Set(n$,p$)
 		path=owner.host.FullPath(p)
 		setname n
-		svnpath=s
-		svnuser=user
-		svnpass=pass
 		Rescan()
 		owner.host.projectreq.Refresh()
 	End Method
@@ -3276,9 +3175,6 @@ Type TProjects Extends TNode
 		CreateMenu "{{popup_nav_proj_findinfiles}}",MENUFINDINFILES,p.projmenu
 		CreateMenu "{{popup_nav_proj_explore}}",MENUBROWSE,p.projmenu
 		CreateMenu "{{popup_nav_proj_shell}}",MENUSHELL,p.projmenu
-		CreateMenu "",0,p.projmenu
-		CreateMenu "{{popup_nav_proj_svnupdate}}",MENUUPDATE,p.projmenu
-		CreateMenu "{{popup_nav_proj_svncommit}}",MENUCOMMIT,p.projmenu
 		CreateMenu "",0,p.projmenu
 		p.projmenuprops=CreateMenu("{{popup_nav_proj_properties}}",MENUPROPS,p.projmenu)
 		host.projectreq.projects=p
