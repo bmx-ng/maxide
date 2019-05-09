@@ -681,12 +681,13 @@ Type TAboutRequester Extends TRequester
 
 	Method GetUPX$()
 		Local upxPath:String = BlitzMaxPath() + "/bin/upx"
+		Local ext:String
 		?Win32
-		upxPath :+ ".exe"
+		ext = ".exe"
 		upxPath = upxPath.Replace("/", "\")
 		?
-		If FileType(upxPath) = FILETYPE_FILE
-			Return GetProcessOutput(StripExt(upxPath), "-V").Split("~n")[0]
+		If FileType(upxPath + ext) = FILETYPE_FILE
+			Return GetProcessOutput(upxPath, "-V").Split("~n")[0]
 		Else
 			Return LocalizeString("{{about_error_notapplicable}}")
 		EndIf
