@@ -3,6 +3,7 @@
 ' BlitzMax native integrated development environment
 
 ' Copyright (c) 2005-2014 Simon Armstrong, Blitz Research Limited
+' Copyright (c) 2015-2019 Bruce A Henderson
 
 ' Permission is hereby granted, free of charge, to any person obtaining a copy
 ' of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +31,7 @@ Framework brl.standardio
 Import MaxGUI.CocoaMaxGui
 ?win32
 Import MaxGUI.Win32MaxGUIEx
-'Import MaxGUI.maxguitextareascintilla
+Import MaxGUI.maxguitextareascintilla
 ?linux
 Import MaxGUI.gtk3maxgui
 Import MaxGUI.gtk3webkitgtk
