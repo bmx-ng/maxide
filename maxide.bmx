@@ -65,10 +65,11 @@ Const DEFAULT_LANGUAGEPATH$ = "incbin::default.language.ini"
 Incbin "window_icon.png"
 ?
 
+Const IDE_NAME$="MaxIDE"
 Const IDE_VERSION$="1.53 [ng]"
 Const TIMER_FREQUENCY=15
 
-AppTitle = "MaxIDE "+IDE_VERSION
+AppTitle = IDE_NAME + " " + IDE_VERSION
 
 ?Win32
 Extern
@@ -84,10 +85,6 @@ EndIf
 Global BCC_VERSION$="{unknown}"	'not valid until codeplay opened
 
 Const EOL$="~n"
-
-Const ABOUT$=..
-"{bcc_version}.~n~n"+..
-"Please visit www.blitzmax.org for all your BlitzMax related needs!"
 
 Const FileTypes$="bmx,bbdoc,txt,ini,doc,plist,bb,cpp,c,cc,m,cxx,s,glsl,hlsl,lua,py,h,hpp,html,htm,css,js,bat,sh,mm,as,java,bbx,cx"
 Const FileTypeFilters$="Code Files:"+FileTypes$+";All Files:*"
@@ -212,6 +209,9 @@ Const MENUARM64V8AENABLED=97
 Const MENUJSENABLED=98
 Const MENUARMV7ENABLED=99
 Const MENUARM64ENABLED=100
+
+Const MENUMISC=140
+Const MENUUPXENABLED=141
 
 Const MENUAPPSTUB=160
 
@@ -607,6 +607,9 @@ Type TAboutRequester Extends TRequester
 		strHeadings:+["{{about_label_gplusplusver}}:"]
 		strValues:+[GetGpp()]
 
+		strHeadings:+["{{about_label_upxver}}:"]
+		strValues:+[GetUPX()]
+
 		PopulateColumns( strHeadings, strValues )
 
 	EndMethod
@@ -679,6 +682,18 @@ Type TAboutRequester Extends TRequester
 		Return GetProcessOutput(gppPath, "-dumpversion").Split("~n")[0]
 	EndMethod
 
+	Method GetUPX$()
+		Local upxPath:String = BlitzMaxPath() + "/bin/upx"
+		?Win32
+		upxPath :+ ".exe"
+		?
+		If FileType(upxPath) = FILETYPE_FILE
+			Return GetProcessOutput(upxPath, "-V").Split("~n")[0]
+		Else
+			Return LocalizeString("{{about_error_notapplicable}}")
+		EndIf
+	EndMethod
+
 	Method PopulateColumns( strHeadings$[], strValues$[] )
 
 		strHeadings = strHeadings[..lblLeftAligned.length]
@@ -741,12 +756,11 @@ Type TAboutRequester Extends TRequester
 ?arm
 		arch = "ARM"
 ?
-		abt.lblTitle = CreateLabel("MaxIDE "+IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
+		abt.lblTitle = CreateLabel(IDE_NAME + " " + IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
 		SetGadgetFont abt.lblTitle, LookupGuiFont( GUIFONT_SYSTEM, 12, FONT_BOLD )
 		SetGadgetLayout abt.lblTitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		y:+21
-
-		abt.lblSubtitle = CreateLabel("Copyright Blitz Research Ltd.",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
+		abt.lblSubtitle = CreateLabel("{{about_label_subtitle}}",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblSubtitle, LookupGuiFont( GUIFONT_SYSTEM, 10, FONT_ITALIC )
 		SetGadgetLayout abt.lblSubtitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 
@@ -5419,7 +5433,7 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:int, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
@@ -5438,6 +5452,8 @@ Type TOpenCode Extends TToolPanel
 			If universal cmd :+ " -i"
 			If warnover cmd :+ " -w"
 			If gdbdebug cmd :+ " -gdb"
+			'UPX compression is only available for "makeapp"
+			If (guiBuild Or consoleBuild) and useUPX cmd :+ " -upx"
 			If requireOverride cmd :+ " -override"
 			'bmk requires "-override" to use "-overerr"
 			If requireOverride And overrideError cmd :+ " -overerr"
@@ -5550,9 +5566,9 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLREPLACE
 				Return FindReplace(String(argument))
 			Case TOOLBUILD
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
@@ -5820,6 +5836,9 @@ Type TCodePlay
 	Field requireOverrideEnable:TGadget,requireOverrideEnabled		'menu,state
 	Field overrideErrorsEnable:TGadget,overrideErrorsEnabled		'menu,state
 
+	Field miscoptionsmenu:TGadget
+	Field upxEnable:TGadget, upxEnabled:Int 'menu,state
+
 	Field quickhelp:TQuickHelp
 	Field running
 	Field recentmenu:TGadget
@@ -5964,6 +5983,7 @@ Type TCodePlay
 		consoleenabled=False
 		guienabled=True
 		makelibenabled=False
+		upxEnabled=False
 		verboseenabled=False
 		quickscanenabled=True
 		universalenabled=False
@@ -6028,6 +6048,8 @@ Type TCodePlay
 					guienabled=Int(b$)
 				Case "prg_makelib"
 					makelibenabled=Int(b$)
+				Case "prg_upx"
+					upxEnabled=Int(b$)
 				Case "prg_verbose"
 					verboseenabled=Int(b$)
 				Case "prg_quickscan"
@@ -6104,6 +6126,7 @@ Type TCodePlay
 		stream.WriteLine "prg_console="+consoleenabled
 		stream.WriteLine "prg_gui="+guienabled
 		stream.WriteLine "prg_makelib="+makelibenabled
+		stream.WriteLine "prg_upx="+upxEnabled
 		stream.WriteLine "prg_verbose="+verboseenabled
 		stream.WriteLine "prg_quickscan="+quickscanenabled
 		stream.WriteLine "prg_universal="+universalenabled
@@ -7014,6 +7037,7 @@ Type TCodePlay
 		nxenable=CreateMenu("{{menu_program_platform_nx}}",MENUNXENABLED,platform)
 		emscriptenenable=CreateMenu("{{menu_program_platform_emscripten}}",MENUEMSCRIPTENENABLED,platform)
 
+		'ARCHITECTURE MENU
 		architecture=CreateMenu("{{menu_program_arch}}",0,program)
 		x86enable=CreateMenu("{{menu_program_arch_x86}}",MENUX86ENABLED,architecture)
 		x64enable=CreateMenu("{{menu_program_arch_x64}}",MENUX64ENABLED,architecture)
@@ -7025,9 +7049,15 @@ Type TCodePlay
 		jsenable=CreateMenu("{{menu_program_arch_js}}",MENUJSENABLED,architecture)
 		armv7enable=CreateMenu("{{menu_program_arch_armv7}}",MENUARMV7ENABLED,architecture)
 		arm64enable=CreateMenu("{{menu_program_arch_arm64}}",MENUARM64ENABLED,architecture)
+		
+		'MISC OPTIONS MENU
+		miscoptionsmenu = CreateMenu("{{menu_program_miscoptions}}",0,program)
+		upxEnable = CreateMenu("{{menu_program_miscoptions_upx}}",MENUUPXENABLED,miscoptionsmenu)
 
+		'APP STUB MENU
 		appstubmenu=CreateMenu("{{menu_program_appstub}}",0,program)
 
+		'DEVELOPER MENU
 		devoptions=CreateMenu("{{menu_program_buildoptions_dev}}",0,program)
 		verboseenable=CreateMenu("{{menu_program_buildoptions_verbose}}",MENUVERBOSEENABLED,devoptions)
 		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
@@ -7053,6 +7083,10 @@ Type TCodePlay
 		If consoleenabled CheckMenu consoleenable
 		If guienabled CheckMenu guienable
 		If makelibenabled CheckMenu makelibenable
+		If upxEnabled CheckMenu upxEnable
+		'disable for sharedlibs
+		If makelibenabled DisableMenu upxEnable
+
 		If verboseenabled CheckMenu verboseenable
 		If quickscanenabled CheckMenu quickscanenable
 		If universalenabled CheckMenu universalenable
@@ -7288,6 +7322,9 @@ Type TCodePlay
 					UncheckMenu consoleenable
 					makelibenabled=False
 					UncheckMenu makelibenable
+
+					'only enable if the UPX binary is present
+					If CanRunUPX() Then EnableMenu(upxEnable)
 				EndIf
 				UpdateWindowMenu window
 
@@ -7300,6 +7337,9 @@ Type TCodePlay
 					UncheckMenu guienable
 					makelibenabled=False
 					UncheckMenu makelibenable
+					
+					'only enable if the UPX binary is present
+					If CanRunUPX() Then EnableMenu(upxEnable)
 				EndIf
 				UpdateWindowMenu window
 
@@ -7312,6 +7352,12 @@ Type TCodePlay
 					UncheckMenu consoleenable
 					guienabled=False
 					UncheckMenu guienable
+					
+					'upx is only available for "makeapp" (console/GUI) 
+					'do not set the flag to false to avoid having
+					'to reconfigure it after switching to console/GUI
+					'upxEnabled=False
+					DisableMenu upxEnable
 				EndIf
 				UpdateWindowMenu window
 
@@ -7404,6 +7450,16 @@ Type TCodePlay
 
 				UpdateArchitectureMenus(menu)
 
+				UpdateWindowMenu window
+
+			Case MENUUPXENABLED
+				If upxEnabled
+					upxEnabled = False
+					UncheckMenu(upxEnable)
+				Else
+					upxEnabled = True
+					CheckMenu(upxEnable)
+				EndIf
 				UpdateWindowMenu window
 
 			Case MENUIMPORTBB
@@ -7767,6 +7823,25 @@ Type TCodePlay
 
 		Return Null
 	End Method
+	
+	
+	Method CanRunUPX:int()
+		local platform:string = GetPlatform()
+		If platform = "emscripten" Or platform = "nx" Or platform = "ios" Then
+			Return False
+		End If
+		
+		Local upx:String = BlitzMaxPath() + "/bin/upx"
+		?win32
+		upx :+ ".exe"
+		?
+		If FileType(upx) = FILETYPE_FILE
+			Return True
+		End If
+		
+		Return False
+	End Method
+
 
 	Method poll()
 
