@@ -65,10 +65,11 @@ Const DEFAULT_LANGUAGEPATH$ = "incbin::default.language.ini"
 Incbin "window_icon.png"
 ?
 
+Const IDE_NAME$="MaxIDE"
 Const IDE_VERSION$="1.53 [ng]"
 Const TIMER_FREQUENCY=15
 
-AppTitle = "MaxIDE "+IDE_VERSION
+AppTitle = IDE_NAME + " " + IDE_VERSION
 
 ?Win32
 Extern
@@ -84,10 +85,6 @@ EndIf
 Global BCC_VERSION$="{unknown}"	'not valid until codeplay opened
 
 Const EOL$="~n"
-
-Const ABOUT$=..
-"{bcc_version}.~n~n"+..
-"Please visit https://blitzmax.org for all your BlitzMax related needs!"
 
 Const FileTypes$="bmx,bbdoc,txt,ini,doc,plist,bb,cpp,c,cc,m,cxx,s,glsl,hlsl,lua,py,h,hpp,html,htm,css,js,bat,sh,mm,as,java,bbx,cx"
 Const FileTypeFilters$="Code Files:"+FileTypes$+";All Files:*"
@@ -690,7 +687,7 @@ Type TAboutRequester Extends TRequester
 		?Win32
 		upxPath :+ ".exe"
 		?
-		If FileType(upxPath) = 1
+		If FileType(upxPath) = FILETYPE_FILE
 			Return GetProcessOutput(upxPath, "-V").Split("~n")[0]
 		Else
 			Return LocalizeString("{{about_error_notapplicable}}")
@@ -759,12 +756,11 @@ Type TAboutRequester Extends TRequester
 ?arm
 		arch = "ARM"
 ?
-		abt.lblTitle = CreateLabel("MaxIDE "+IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
+		abt.lblTitle = CreateLabel(IDE_NAME + " " + IDE_VERSION + " (" + arch + ")",ScaledSize(6),ScaledSize(y),w,ScaledSize(20),win,LABEL_LEFT)
 		SetGadgetFont abt.lblTitle, LookupGuiFont( GUIFONT_SYSTEM, 12, FONT_BOLD )
 		SetGadgetLayout abt.lblTitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 		y:+21
-
-		abt.lblSubtitle = CreateLabel("Copyright Blitz Research Ltd.",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
+		abt.lblSubtitle = CreateLabel("{{about_label_subtitle}}",ScaledSize(6),ScaledSize(y),w,ScaledSize(22),win,LABEL_LEFT)
 		SetGadgetFont abt.lblSubtitle, LookupGuiFont( GUIFONT_SYSTEM, 10, FONT_ITALIC )
 		SetGadgetLayout abt.lblSubtitle, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_ALIGNED, EDGE_CENTERED
 
@@ -7839,7 +7835,7 @@ Type TCodePlay
 		?win32
 		upx :+ ".exe"
 		?
-		If FileType(upx) = 1
+		If FileType(upx) = FILETYPE_FILE
 			Return True
 		End If
 		
