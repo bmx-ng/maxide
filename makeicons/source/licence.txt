@@ -1,0 +1,10 @@
+Files:
+- Build-Run_16x.svg
+- Build_16x.svg
+- Go_16x.svg
+- LockClosed_16x.svg
+- LockGoto_16x.svg
+- LockOpen_16x.svg
+
+Licence: CC BY 2.0
+Author: Ronny Otto - https://github.com/GWRon
