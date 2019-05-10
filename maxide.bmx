@@ -6211,14 +6211,14 @@ Type TCodePlay
 		EndIf
 ' locked build file buttons
 		If lockedpanel
+			EnableGadgetItem( toolbar, TB_LOCKGOTO)
 			If GadgetItemIcon( toolbar, TB_LOCKOPEN ) <> TB_LOCKCLOSED
 				ModifyGadgetItem( toolbar, TB_LOCKOPEN, "", GADGETITEM_LOCALIZED, TB_LOCKCLOSED, "{{tb_lockedbuildfile}}: " + lockedpanel.path )
-				EnableGadgetItem( toolbar, TB_LOCKGOTO)
 			EndIf
 		Else
+			DisableGadgetItem( toolbar, TB_LOCKGOTO)
 			If GadgetItemIcon( toolbar, TB_LOCKOPEN ) <> TB_LOCKOPEN
 				ModifyGadgetItem( toolbar, TB_LOCKOPEN, "", GADGETITEM_LOCALIZED, TB_LOCKOPEN, "{{tb_lockbuildfile}}" )
-				DisableGadgetItem( toolbar, TB_LOCKGOTO)
 			EndIf
 		EndIf
 
