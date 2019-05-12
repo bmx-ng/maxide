@@ -209,6 +209,7 @@ Const MENUARM64ENABLED=100
 
 Const MENUMISC=140
 Const MENUUPXENABLED=141
+Const MENULAST=142
 
 Const MENUAPPSTUB=160
 
@@ -235,6 +236,10 @@ Const TB_CONTINUE=20
 
 Const TAB$=Chr(9)
 Const QUOTES$=Chr(34)
+
+'values assigned for the shortcut (OS specific)
+Global lastTabKey:int
+Global lastTabMod:int
 
 Global TEMPCOUNT
 Global codeplay:TCodePlay
@@ -5145,6 +5150,12 @@ Type TOpenCode Extends TToolPanel
 ?MacOS
 		If key=25 And mods=MODIFIER_SHIFT key=KEY_TAB
 ?
+		'ignore panel-tabbing
+		If id=EVENT_KEYCHAR And this And key=lastTabKey And mods=lastTabMod
+			this.host.SwitchPanel()
+			Return 0
+		EndIf
+		
 		If id=EVENT_KEYCHAR And this And key=KEY_TAB And Not TextAreaHasBlockIndent(this.textarea) And TextAreaSelLen( this.textarea,TEXTAREA_CHARS )
 			Select mods
 				Case MODIFIER_NONE
@@ -5688,6 +5699,7 @@ Type TCodePlay
 	Field panels:TToolPanel[]
 	Field helppanel:THelpPanel
 	Field currentpanel:TToolPanel
+	Field lastPanel:TToolPanel
 	Field output:TOutputPanel
 	Field lockedpanel:TToolPanel
 	Field activepanel:TToolPanel
@@ -6479,8 +6491,29 @@ Type TCodePlay
 		SetGadgetText window,"MaxIDE"+title
 	End Method
 
+
+	Method SwitchPanel()
+		If Not currentpanel Then Return
+
+		'if there was no panel selected before, use the previous one 
+		If Not lastPanel or lastPanel = currentPanel
+			print "find last Panel"
+			Local prevIndex:int = currentpanel.index - 1
+			'do not tab to "help" (= 0)
+			If prevIndex < 0 Then prevIndex = panels.length-1
+			lastPanel = panels[prevIndex]
+		EndIf
+
+		If lastPanel Then SelectPanel(lastPanel)
+	End Method
+
 	Method SelectPanel(panel:TToolPanel)
-		Local	curr:TToolPanel = currentpanel
+		Local curr:TToolPanel = currentpanel
+
+		If Not lastPanel Or lastPanel <> currentpanel
+			lastPanel = currentpanel
+		EndIf
+
 		currentpanel=panel
 		If curr And curr<>currentpanel
 			SelectGadgetItem tabbar,panel.index
@@ -6838,14 +6871,24 @@ Type TCodePlay
 ?MacOS
 			CreateMenu "{{menu_file_nexttab}}",MENUNEXT,file,KEY_RIGHT,MENUMOD
 			CreateMenu "{{menu_file_prevtab}}",MENUPREV,file,KEY_LEFT,MENUMOD
+			lastTabKey = KEY_TAB
+			lastTabMod = MENUMOD
 ?Not MacOS
 			CreateMenu "{{menu_file_nexttab}}",MENUNEXT,file,KEY_RIGHT,MODIFIER_ALT
 			CreateMenu "{{menu_file_prevtab}}",MENUPREV,file,KEY_LEFT,MODIFIER_ALT
+			lastTabKey = KEY_TAB
+			lastTabMod = MODIFIER_CONTROL
 ?
 		Else
 			CreateMenu "{{menu_file_nexttab}}",MENUNEXT,file,KEY_RIGHT,MENUMOD
 			CreateMenu "{{menu_file_prevtab}}",MENUPREV,file,KEY_LEFT,MENUMOD
+			CreateMenu "{{menu_file_lasttab}}",MENULAST,file,KEY_TAB,MENUMOD
+			lastTabKey = KEY_TAB
+			lastTabMod = MENUMOD
 		EndIf
+		CreateMenu "{{menu_file_lasttab}}",MENULAST,file,lastTabKey,lastTabMod
+
+
 		CreateMenu "",0,file
 		CreateMenu "{{menu_file_importbb}}",MENUIMPORTBB,file
 		CreateMenu "",0,file
@@ -7385,6 +7428,9 @@ Type TCodePlay
 				index=currentpanel.index-1
 				If index<0 index=panels.length-1
 				SelectPanel panels[index]
+
+			Case MENULAST
+				SwitchPanel()
 
 			Case MENUQUICKHELP
 				currentpanel.invoke TOOLHELP
