@@ -6497,9 +6497,7 @@ Type TCodePlay
 
 		'if there was no panel selected before, use the previous one 
 		If Not lastPanel or lastPanel = currentPanel
-			print "find last Panel"
 			Local prevIndex:int = currentpanel.index - 1
-			'do not tab to "help" (= 0)
 			If prevIndex < 0 Then prevIndex = panels.length-1
 			lastPanel = panels[prevIndex]
 		EndIf
@@ -6510,12 +6508,12 @@ Type TCodePlay
 	Method SelectPanel(panel:TToolPanel)
 		Local curr:TToolPanel = currentpanel
 
-		If Not lastPanel Or lastPanel <> currentpanel
-			lastPanel = currentpanel
-		EndIf
-
 		currentpanel=panel
 		If curr And curr<>currentpanel
+			'backup panel for panel-switching
+			If Not lastPanel Or lastPanel <> currentpanel
+				lastPanel = currentpanel
+			EndIf
 			SelectGadgetItem tabbar,panel.index
 			ShowGadget panel.panel
 			If panel.active activepanel=panel
