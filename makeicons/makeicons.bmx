@@ -71,10 +71,15 @@ Function BuildIcons:TPixmap(sz:Int)
 End Function
 
 Function GetActions:String[]()
+	'attention: place all icons replacing other ones (eg toggle states)
+	'at the end of the file. Allows constant values to access
+	'toolbar indices _and_ iconStrip indices with the same value
 	Return [ "NewFile","OpenFile","CloseDocument","Save"," ", ..
 		 "Cut","Copy","Paste","Search"," ", ..
 		 "Build","Build-Run","StepOver","StepIn","StepOut","Stop"," ", ..
 		 "Home","StepBackwards","StepForward", ..
-		 "Go" ..
+		 " ", "LockOpen", "LockGoto", ..
+
+		 "Go", "LockClosed" ..
 		]
 End Function

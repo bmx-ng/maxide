@@ -66,7 +66,7 @@ Incbin "window_icon.png"
 ?
 
 Const IDE_NAME$="MaxIDE"
-Const IDE_VERSION$="1.53 [ng]"
+Const IDE_VERSION$="1.54 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = IDE_NAME + " " + IDE_VERSION
@@ -207,10 +207,13 @@ Const MENUJSENABLED=98
 Const MENUARMV7ENABLED=99
 Const MENUARM64ENABLED=100
 
+Const MENUGOTOBUILD=110
+
 Const MENUMISC=140
 Const MENUUPXENABLED=141
 
 Const MENUAPPSTUB=160
+
 
 Const MENURECENT=256
 
@@ -218,20 +221,28 @@ Const TB_NEW=0
 Const TB_OPEN=1
 Const TB_CLOSE=2
 Const TB_SAVE=3
+'spacer=4
 Const TB_CUT=5
 Const TB_COPY=6
 Const TB_PASTE=7
 Const TB_FIND=8
+'spacer=9
 Const TB_BUILD=10
 Const TB_BUILDRUN=11
 Const TB_STEP=12
 Const TB_STEPIN=13
 Const TB_STEPOUT=14
 Const TB_STOP=15
+'spacer=16
 Const TB_HOME=17
 Const TB_BACK=18
 Const TB_FORWARDS=19
-Const TB_CONTINUE=20
+'spacer=20
+Const TB_LOCKOPEN=21
+Const TB_LOCKGOTO=22
+'toggle state elements:
+Const TB_CONTINUE=23
+Const TB_LOCKCLOSED=24
 
 Const TAB$=Chr(9)
 Const QUOTES$=Chr(34)
@@ -5206,6 +5217,10 @@ Type TOpenCode Extends TToolPanel
 			host.lockedpanel=Null
 		EndIf
 		host.RefreshPanel Self
+		'toolbar changes (lock icon)
+		host.RefreshToolbar
+		'menu entry changes
+		host.RefreshMenu
 	End Method
 
 	Method Help()
@@ -5733,6 +5748,9 @@ Type TCodePlay
 	Field gdbdebugenable:TGadget,gdbdebugenabled		'menu,state
 	Field requireOverrideEnable:TGadget,requireOverrideEnabled		'menu,state
 	Field overrideErrorsEnable:TGadget,overrideErrorsEnabled		'menu,state
+	Field lockBuildMenuItem:TGadget
+	Field unlockBuildMenuItem:TGadget
+	Field gotoBuildMenuItem:TGadget
 
 	Field miscoptionsmenu:TGadget
 	Field upxEnable:TGadget, upxEnabled:Int 'menu,state
@@ -6134,6 +6152,18 @@ Type TCodePlay
 
 	Method RefreshMenu()
 		TOpenCode.RefreshHighlightingMsg()
+
+		'disable menu entry to unlock build lock if there is none
+		If unlockBuildMenuItem and gotoBuildMenuItem
+			If not lockedPanel
+				DisableMenu(unlockBuildMenuItem)
+				DisableMenu(gotoBuildMenuItem)
+			Else
+				EnableMenu(unlockBuildMenuItem)
+				EnableMenu(gotoBuildMenuItem)
+			EndIf
+		EndIf
+		
 		UpdateWindowMenu window
 	EndMethod
 
@@ -6179,6 +6209,19 @@ Type TCodePlay
 		Else
 			DisableGadgetItem toolbar,TB_STOP
 		EndIf
+' locked build file buttons
+		If lockedpanel
+			EnableGadgetItem( toolbar, TB_LOCKGOTO)
+			If GadgetItemIcon( toolbar, TB_LOCKOPEN ) <> TB_LOCKCLOSED
+				ModifyGadgetItem( toolbar, TB_LOCKOPEN, "", GADGETITEM_LOCALIZED, TB_LOCKCLOSED, "{{tb_lockedbuildfile}}: " + lockedpanel.path )
+			EndIf
+		Else
+			DisableGadgetItem( toolbar, TB_LOCKGOTO)
+			If GadgetItemIcon( toolbar, TB_LOCKOPEN ) <> TB_LOCKOPEN
+				ModifyGadgetItem( toolbar, TB_LOCKOPEN, "", GADGETITEM_LOCALIZED, TB_LOCKOPEN, "{{tb_lockbuildfile}}" )
+			EndIf
+		EndIf
+
 	End Method
 
 	Method IsSourceOpen(path$)
@@ -6637,11 +6680,23 @@ Type TCodePlay
 		EndRem
 
 
-		RemoveGadgetItem toolbar, TB_CONTINUE
+		'you cannot simply remove by "sprite index", so better just
+		'remove the last entry each time
+		'RemoveGadgetItem toolbar, TB_CONTINUE
+		'RemoveGadgetItem toolbar, TB_LOCKCLOSED
+		RemoveGadgetItem toolbar, CountGadgetItems(toolbar)-1
+		RemoveGadgetItem toolbar, CountGadgetItems(toolbar)-1
 
 		'Rem
-		SetToolBarTips toolbar, ["{{tb_new}}","{{tb_open}}","{{tb_close}}","{{tb_save}}","","{{tb_cut}}","{{tb_copy}}","{{tb_paste}}","{{tb_find}}","",..
-		                         "{{tb_build}}","{{tb_buildrun}}","{{tb_step}}","{{tb_stepin}}","{{tb_stepout}}","{{tb_stop}}","","{{tb_home}}","{{tb_back}}","{{tb_forward}}"]
+		SetToolBarTips toolbar, ["{{tb_new}}","{{tb_open}}","{{tb_close}}","{{tb_save}}", ..
+		                         "", ..
+		                         "{{tb_cut}}","{{tb_copy}}","{{tb_paste}}","{{tb_find}}", ..
+		                         "", ..
+		                         "{{tb_build}}","{{tb_buildrun}}","{{tb_step}}","{{tb_stepin}}","{{tb_stepout}}","{{tb_stop}}", ..
+		                         "", ..
+		                         "{{tb_home}}","{{tb_back}}","{{tb_forward}}", ..
+		                         "", ..
+		                         "{{tb_lockbuildfile}}", "{{tb_gotobuildfile}}"]
 		'End Rem
 
 		If Not options.showtoolbar Then HideGadget toolbar
@@ -6961,8 +7016,9 @@ Type TCodePlay
 		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
 
 		CreateMenu "",0,program
-		CreateMenu "{{menu_program_lockbuildfile}}",MENULOCKBUILD,program
-		CreateMenu "{{menu_program_unlockbuildfile}}",MENUUNLOCKBUILD,program
+		lockBuildMenuItem = CreateMenu("{{menu_program_lockbuildfile}}",MENULOCKBUILD,program)
+		unlockBuildMenuItem=CreateMenu("{{menu_program_unlockbuildfile}}",MENUUNLOCKBUILD,program)
+		gotoBuildMenuItem=CreateMenu("{{menu_program_gotobuildfile}}",MENUGOTOBUILD,program)
 		CreateMenu "",0,program
 		buildmods=CreateMenu("{{menu_program_buildmods}}",MENUBUILDMODULES,program,KEY_D,MENUMOD)
 		buildallmods=CreateMenu("{{menu_program_rebuildallmods}}",MENUBUILDALLMODULES,program)
@@ -6995,6 +7051,10 @@ Type TCodePlay
 		'need to do this below "CheckMenu" as it automatically enables
 		'the menu (again)
 		If Not requireOverrideEnabled DisableMenu overrideErrorsEnable
+		If Not lockedPanel 
+			DisableMenu unlockBuildMenuItem
+			DisableMenu gotoBuildMenuItem
+		EndIf
 
 		Local defaultArch:Int = -1
 		For Local i:Int = 0 Until architectureenabled.length
@@ -7178,6 +7238,10 @@ Type TCodePlay
 				activepanel.invoke TOOLLOCK
 			Case MENUUNLOCKBUILD
 				If lockedpanel lockedpanel.invoke TOOLUNLOCK
+			Case MENUGOTOBUILD
+				If lockedpanel 
+					SelectPanel(lockedPanel)
+				EndIf
 
 			Case MENUCOMMANDLINE cmdlinereq.Show
 
@@ -7784,23 +7848,55 @@ Type TCodePlay
 				Select EventSource()
 					Case toolbar
 						Select EventData()
-							Case TB_NEW OpenSource ""
-							Case TB_OPEN OpenSource "."
-							Case TB_CLOSE currentpanel.invoke TOOLCLOSE
-							Case TB_SAVE currentpanel.invoke TOOLSAVE
-							Case TB_CUT currentpanel.invoke TOOLCUT
-							Case TB_COPY currentpanel.invoke TOOLCOPY
-							Case TB_PASTE currentpanel.invoke TOOLPASTE
-							Case TB_FIND currentpanel.invoke TOOLFIND
-							Case TB_BUILD BuildCode
-							Case TB_BUILDRUN RunCode
-							Case TB_STEP If output output.stepover
-							Case TB_STEPIN If output output.stepin
-							Case TB_STEPOUT If output output.stepout
-							Case TB_STOP If output output.Stop
-							Case TB_HOME helppanel.Home;SelectPanel helppanel
-							Case TB_BACK helppanel.Back;SelectPanel helppanel
-							Case TB_FORWARDS helppanel.Forward;SelectPanel helppanel
+							Case TB_NEW
+								OpenSource ""
+							Case TB_OPEN
+								OpenSource "."
+							Case TB_CLOSE
+								currentpanel.invoke TOOLCLOSE
+							Case TB_SAVE
+								currentpanel.invoke TOOLSAVE
+							Case TB_CUT
+								currentpanel.invoke TOOLCUT
+							Case TB_COPY
+								currentpanel.invoke TOOLCOPY
+							Case TB_PASTE
+								currentpanel.invoke TOOLPASTE
+							Case TB_FIND
+								currentpanel.invoke TOOLFIND
+							Case TB_BUILD
+								BuildCode
+							Case TB_BUILDRUN
+								RunCode
+							Case TB_STEP
+								If output output.stepover
+							Case TB_STEPIN
+								If output output.stepin
+							Case TB_STEPOUT
+								If output output.stepout
+							Case TB_STOP
+								If output output.Stop
+							Case TB_HOME
+								helppanel.Home
+								SelectPanel helppanel
+							Case TB_BACK
+								helppanel.Back
+								SelectPanel helppanel
+							Case TB_FORWARDS
+								helppanel.Forward
+								SelectPanel helppanel
+							Case TB_LOCKOPEN
+								'unlock
+								If lockedPanel 
+									TOpenCode(lockedPanel).SetLocked(False)
+								'lock if lockable
+								ElseIf TOpenCode(activePanel) 
+									TOpenCode(activePanel).SetLocked(True)
+								EndIf
+							Case TB_LOCKGOTO
+								If lockedPanel
+									SelectPanel(lockedPanel)
+								EndIf
 						End Select
 
 					Case tabbar
