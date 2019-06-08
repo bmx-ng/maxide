@@ -34,7 +34,8 @@ Import MaxGUI.Win32MaxGUIEx
 Import MaxGUI.maxguitextareascintilla
 ?linux
 Import MaxGUI.gtk3maxgui
-Import MaxGUI.gtk3webkitgtk
+'Import MaxGUI.gtk3webkitgtk
+Import MaxGUI.gtk3webkit2gtk
 Import MaxGUI.maxguitextareascintilla
 ?
 Import MaxGUI.ProxyGadgets
