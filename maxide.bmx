@@ -250,8 +250,8 @@ Const TAB$=Chr(9)
 Const QUOTES$=Chr(34)
 
 'values assigned for the shortcut (OS specific)
-Global lastTabKey:int
-Global lastTabMod:int
+Global lastTabKey:Int
+Global lastTabMod:Int
 
 Global TEMPCOUNT
 Global codeplay:TCodePlay
@@ -6167,8 +6167,8 @@ Type TCodePlay
 		TOpenCode.RefreshHighlightingMsg()
 
 		'disable menu entry to unlock build lock if there is none
-		If unlockBuildMenuItem and gotoBuildMenuItem
-			If not lockedPanel
+		If unlockBuildMenuItem And gotoBuildMenuItem
+			If Not lockedPanel
 				DisableMenu(unlockBuildMenuItem)
 				DisableMenu(gotoBuildMenuItem)
 			Else
@@ -6540,8 +6540,8 @@ Type TCodePlay
 		If Not currentpanel Then Return
 
 		'if there was no panel selected before, use the previous one 
-		If Not lastPanel or lastPanel = currentPanel
-			Local prevIndex:int = currentpanel.index - 1
+		If Not lastPanel Or lastPanel = currentPanel
+			Local prevIndex:Int = currentpanel.index - 1
 			If prevIndex < 0 Then prevIndex = panels.length-1
 			lastPanel = panels[prevIndex]
 		EndIf
