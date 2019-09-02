@@ -180,6 +180,7 @@ Const MENUWARNOVERENABLED=65
 Const MENUGDBDEBUGENABLED=66
 Const MENUREQUIREOVERRIDEENABLED=67
 Const MENUOVERRIDEERRORSENABLED=68
+Const MENUGPROFENABLED=69
 
 Const MENUAPPOPTIONS=70
 Const MENUCONSOLEENABLED=71
@@ -5358,7 +5359,7 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:Int, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:Int, gprof:Int, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
@@ -5380,6 +5381,7 @@ Type TOpenCode Extends TToolPanel
 			'UPX compression is only available for "makeapp"
 			If (guiBuild Or consoleBuild) And useUPX cmd :+ " -upx"
 			If requireOverride cmd :+ " -override"
+			If gprof cmd :+ " -gprof"
 			'bmk requires "-override" to use "-overerr"
 			If requireOverride And overrideError cmd :+ " -overerr"
 			If appstub And appstub <> "brl.appstub" cmd :+ " -b " + appstub
@@ -5491,9 +5493,9 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLREPLACE
 				Return FindReplace(String(argument))
 			Case TOOLBUILD
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
@@ -5761,6 +5763,7 @@ Type TCodePlay
 	Field gdbdebugenable:TGadget,gdbdebugenabled		'menu,state
 	Field requireOverrideEnable:TGadget,requireOverrideEnabled		'menu,state
 	Field overrideErrorsEnable:TGadget,overrideErrorsEnabled		'menu,state
+	Field gprofenable:TGadget,gprofenabled		'menu,state
 	Field lockBuildMenuItem:TGadget
 	Field unlockBuildMenuItem:TGadget
 	Field gotoBuildMenuItem:TGadget
@@ -5920,6 +5923,7 @@ Type TCodePlay
 		gdbdebugenabled=False
 		requireOverrideEnabled=False
 		overrideErrorsEnabled=False
+		gprofenabled=False
 		For Local i:Int = 0 Until platformenabled.length
 			platformenabled[i] = False
 		Next
@@ -5993,6 +5997,8 @@ Type TCodePlay
 					requireOverrideEnabled=Int(b$)
 				Case "prg_overrideerrors"
 					overrideErrorsEnabled=Int(b$)
+				Case "prg_gprof"
+					gprofenabled=Int(b$)
 				Case "prg_platform"
 					For Local i:Int = 0 Until platformenabled.length
 						platformenabled[i] = False
@@ -6063,6 +6069,7 @@ Type TCodePlay
 		stream.WriteLine "prg_gdbdebug="+gdbdebugenabled
 		stream.WriteLine "prg_requireoverride="+requireOverrideEnabled
 		stream.WriteLine "prg_overrideerrors="+overrideErrorsEnabled
+		stream.WriteLine "prg_gprof="+gprofenabled
 		For Local i:Int = 0 Until platformenabled.length
 			If platformenabled[i] Then
 				stream.WriteLine "prg_platform=" + i
@@ -6357,6 +6364,7 @@ Type TCodePlay
 				cmd :+ " -overerr"
 			EndIf
 		EndIf
+		If gprofenabled cmd:+"-gprof "
 		Local platform:String = GetPlatform()
 		Local architecture:String = GetArchitecture()
 		If platform cmd :+ "-l " + platform + " "
@@ -7056,6 +7064,7 @@ Type TCodePlay
 		devoptions=CreateMenu("{{menu_program_buildoptions_dev}}",0,program)
 		verboseenable=CreateMenu("{{menu_program_buildoptions_verbose}}",MENUVERBOSEENABLED,devoptions)
 		gdbdebugenable=CreateMenu("{{menu_program_buildoptions_gdbdebug}}",MENUGDBDEBUGENABLED,devoptions)
+		gprofenable=CreateMenu("{{menu_program_buildoptions_gprof}}",MENUGPROFENABLED,devoptions)
 
 		CreateMenu "",0,program
 		lockBuildMenuItem = CreateMenu("{{menu_program_lockbuildfile}}",MENULOCKBUILD,program)
@@ -7090,6 +7099,7 @@ Type TCodePlay
 		If gdbdebugenabled CheckMenu gdbdebugenable
 		If requireOverrideEnabled CheckMenu requireOverrideEnable
 		If overrideErrorsEnabled CheckMenu overrideErrorsEnable
+		If gprofenabled CheckMenu gprofenable
 		'need to do this below "CheckMenu" as it automatically enables
 		'the menu (again)
 		If Not requireOverrideEnabled DisableMenu overrideErrorsEnable
@@ -7428,6 +7438,16 @@ Type TCodePlay
 				Else
 					overrideErrorsEnabled=True
 					CheckMenu overrideErrorsEnable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUGPROFENABLED
+				If gprofenabled
+					gprofenabled=False
+					UncheckMenu gprofenable
+				Else
+					gprofenabled=True
+					CheckMenu gprofenable
 				EndIf
 				UpdateWindowMenu window
 
