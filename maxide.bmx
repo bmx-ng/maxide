@@ -5345,7 +5345,7 @@ Type TOpenCode Extends TToolPanel
 		Local txt$ = src.Replace$(Chr(10),Chr(13)+Chr(10))
 
 		Try
-			SaveText txt,file
+			SaveText txt,file, ETextStreamFormat.UTF8, False
 		Catch exception:Object
 			Local err$=String(exception)
 			Notify "Save Error~n"+err
