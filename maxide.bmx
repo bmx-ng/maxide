@@ -67,7 +67,7 @@ Incbin "window_icon.png"
 ?
 
 Const IDE_NAME$="MaxIDE"
-Const IDE_VERSION$="1.54 [ng]"
+Const IDE_VERSION$="1.55 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = IDE_NAME + " " + IDE_VERSION
