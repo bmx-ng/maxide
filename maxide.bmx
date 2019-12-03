@@ -67,7 +67,7 @@ Incbin "window_icon.png"
 ?
 
 Const IDE_NAME$="MaxIDE"
-Const IDE_VERSION$="1.55 [ng]"
+Const IDE_VERSION$="1.56 [ng]"
 Const TIMER_FREQUENCY=15
 
 AppTitle = IDE_NAME + " " + IDE_VERSION
@@ -4299,11 +4299,12 @@ Type TOpenCode Extends TToolPanel
 
 	Method parsebmx(n:TCodeNode)
 		Local	src$,line,col
-		Local	p,p1,r,t,m,f,l,e
+		Local	p,p1,r,t,m,f,l,e,s,i,en
+		Local tt:Int
 
 		src=cleansrcl
 		p1=src.length
-		p=-1;r=-1;t=-1;m=-1;f=-1;l=-1
+		p=-1;r=-1;t=-1;m=-1;f=-1;l=-1;s=-1;i=-1;en=-1
 		While p<p1			'update rem,type,method,function,label pointers
 			While r<=p
 				r=FindToken("rem",src,r+1)
@@ -4311,6 +4312,27 @@ Type TOpenCode Extends TToolPanel
 			While t<=p
 				t=FindToken("type",src,t+1)
 			Wend
+			While s<=p
+				s=FindToken("struct",src,s+1)
+			Wend
+			If s < t Then
+				t = s
+				tt = 1
+			End If
+			While i<=p
+				i=FindToken("interface",src,i+1)
+			Wend
+			If i < t Then
+				t = i
+				tt = 2
+			End If
+			While en<=p
+				en=FindToken("enum",src,en+1)
+			Wend
+			If en < t Then
+				t = en
+				tt = 3
+			End If
 			While m<=p
 				m=FindToken("method",src,m+1)
 			Wend
@@ -4339,8 +4361,18 @@ Type TOpenCode Extends TToolPanel
 			Wend
 			If t<m And t<f And t<l
 				e=src.find(EOL,t)
-				n=n.AddCodeNode(cleansrc[t..e],t,FindEndToken("type",src,t,True))
+				Select tt
+					Case 0
+						n=n.AddCodeNode(cleansrc[t..e],t,FindEndToken("type",src,t,True))
+					Case 1
+						n=n.AddCodeNode(cleansrc[t..e],t,FindEndToken("struct",src,t,True))
+					Case 2
+						n=n.AddCodeNode(cleansrc[t..e],t,FindEndToken("interface",src,t,True))
+					Case 3
+						n=n.AddCodeNode(cleansrc[t..e],t,FindEndToken("enum",src,t,True))
+				End Select
 				p=t+1
+				tt = 0
 				Continue
 			EndIf
 			If m<f And m<l
