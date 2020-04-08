@@ -3,7 +3,7 @@
 ' BlitzMax native integrated development environment
 
 ' Copyright (c) 2005-2014 Simon Armstrong, Blitz Research Limited
-' Copyright (c) 2015-2019 Bruce A Henderson
+' Copyright (c) 2015-2020 Bruce A Henderson
 
 ' Permission is hereby granted, free of charge, to any person obtaining a copy
 ' of this software and associated documentation files (the "Software"), to deal
@@ -181,6 +181,8 @@ Const MENUGDBDEBUGENABLED=66
 Const MENUREQUIREOVERRIDEENABLED=67
 Const MENUOVERRIDEERRORSENABLED=68
 Const MENUGPROFENABLED=69
+
+Const MENUHIRESENABLED=170
 
 Const MENUAPPOPTIONS=70
 Const MENUCONSOLEENABLED=71
@@ -5391,7 +5393,7 @@ Type TOpenCode Extends TToolPanel
 		Return True
 	End Method
 
-	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:Int, gprof:Int, platform:String = Null, architecture:String = Null, appstub:String = Null)
+	Method BuildSource(quick,debug,threaded,consoleBuild,guiBuild,makelibBuild,run, verbose, quickscan, universal, warnover, gdbdebug, requireOverride, overrideError, useUPX:Int, gprof:Int, hires:Int, platform:String = Null, architecture:String = Null, appstub:String = Null)
 		Local cmd$,out$,arg$
 		If isbmx Or isc Or iscpp
 			cmd$=quote(host.bmkpath)
@@ -5417,6 +5419,7 @@ Type TOpenCode Extends TToolPanel
 			'bmk requires "-override" to use "-overerr"
 			If requireOverride And overrideError cmd :+ " -overerr"
 			If appstub And appstub <> "brl.appstub" cmd :+ " -b " + appstub
+			If guiBuild And hires cmd$:+" -hi"
 
 			If platform cmd :+ " -l " + platform
 			If architecture cmd :+ " -g " + architecture
@@ -5525,9 +5528,9 @@ Type TOpenCode Extends TToolPanel
 			Case TOOLREPLACE
 				Return FindReplace(String(argument))
 			Case TOOLBUILD
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,False, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.hiresenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLRUN
-				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
+				BuildSource host.quickenabled,host.debugenabled,host.threadedenabled,host.consoleenabled, host.guienabled, host.makelibenabled,True, host.verboseenabled, host.quickscanenabled, host.universalenabled, host.warnoverenabled, host.gdbdebugenabled, host.requireOverrideEnabled, host.overrideErrorsEnabled, host.upxEnabled, host.gprofenabled, host.hiresenabled, host.GetPlatform(), host.GetArchitecture(), host.selectedappstub
 			Case TOOLLOCK
 				SetLocked True
 			Case TOOLUNLOCK
@@ -5796,6 +5799,7 @@ Type TCodePlay
 	Field requireOverrideEnable:TGadget,requireOverrideEnabled		'menu,state
 	Field overrideErrorsEnable:TGadget,overrideErrorsEnabled		'menu,state
 	Field gprofenable:TGadget,gprofenabled		'menu,state
+	Field hiresenable:TGadget,hiresenabled		'menu,state
 	Field lockBuildMenuItem:TGadget
 	Field unlockBuildMenuItem:TGadget
 	Field gotoBuildMenuItem:TGadget
@@ -5956,6 +5960,7 @@ Type TCodePlay
 		requireOverrideEnabled=False
 		overrideErrorsEnabled=False
 		gprofenabled=False
+		hiresenabled=True
 		For Local i:Int = 0 Until platformenabled.length
 			platformenabled[i] = False
 		Next
@@ -6031,6 +6036,8 @@ Type TCodePlay
 					overrideErrorsEnabled=Int(b$)
 				Case "prg_gprof"
 					gprofenabled=Int(b$)
+				Case "prg_hires"
+					hiresenabled=Int(b$)
 				Case "prg_platform"
 					For Local i:Int = 0 Until platformenabled.length
 						platformenabled[i] = False
@@ -6102,6 +6109,7 @@ Type TCodePlay
 		stream.WriteLine "prg_requireoverride="+requireOverrideEnabled
 		stream.WriteLine "prg_overrideerrors="+overrideErrorsEnabled
 		stream.WriteLine "prg_gprof="+gprofenabled
+		stream.WriteLine "prg_hires="+hiresenabled
 		For Local i:Int = 0 Until platformenabled.length
 			If platformenabled[i] Then
 				stream.WriteLine "prg_platform=" + i
@@ -7054,6 +7062,7 @@ Type TCodePlay
 		warnoverenable=CreateMenu("{{menu_program_buildoptions_warnover}}",MENUWARNOVERENABLED,buildoptions)
 		requireOverrideEnable=CreateMenu("{{menu_program_buildoptions_requireoverride}}",MENUREQUIREOVERRIDEENABLED,buildoptions)
 		overrideErrorsEnable=CreateMenu("{{menu_program_buildoptions_overrideerrors}}",MENUOVERRIDEERRORSENABLED,buildoptions)
+		hiresEnable=CreateMenu("{{menu_program_buildoptions_hires}}",MENUHIRESENABLED,buildoptions)
 
 		platform=CreateMenu("{{menu_program_platform}}",0,program)
 ?Not raspberrypi
@@ -7132,6 +7141,7 @@ Type TCodePlay
 		If requireOverrideEnabled CheckMenu requireOverrideEnable
 		If overrideErrorsEnabled CheckMenu overrideErrorsEnable
 		If gprofenabled CheckMenu gprofenable
+		If hiresenabled CheckMenu hiresenable
 		'need to do this below "CheckMenu" as it automatically enables
 		'the menu (again)
 		If Not requireOverrideEnabled DisableMenu overrideErrorsEnable
@@ -7480,6 +7490,16 @@ Type TCodePlay
 				Else
 					gprofenabled=True
 					CheckMenu gprofenable
+				EndIf
+				UpdateWindowMenu window
+
+			Case MENUHIRESENABLED
+				If hiresenabled
+					hiresenabled=False
+					UncheckMenu hiresenable
+				Else
+					hiresenabled=True
+					CheckMenu hiresenable
 				EndIf
 				UpdateWindowMenu window
 
