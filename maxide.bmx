@@ -7016,8 +7016,20 @@ Type TCodePlay
 		CreateMenu "",0,edit
 		CreateMenu "{{menu_edit_selectall}}",MENUSELECTALL,edit,KEY_A,MENUMOD
 		CreateMenu "",0,edit
-		CreateMenu "{{menu_edit_blockindent}}",MENUINDENT,edit,KEY_CLOSEBRACKET,MENUMOD	
-		CreateMenu "{{menu_edit_blockoutdent}}",MENUOUTDENT,edit,KEY_OPENBRACKET,MENUMOD
+
+		Local biGadget:TGadget = CreateMenu("{{menu_edit_blockindent}}",MENUINDENT,edit,KEY_TAB)
+		Local boGadget:TGadget = CreateMenu("{{menu_edit_blockoutdent}}",MENUOUTDENT,edit,KEY_TAB,MODIFIER_SHIFT)
+		?Win32
+			'MaxGUI on Windows informs menu gadgets even if a textarea
+			'used the incoming key strokes
+			'So simple hotkeys would get added to the textarea but also
+			'emit an EVENT_MENUACTION
+			'This is why on windows we just remove the hotkey for functions
+			'handled by the textarea or MaxIDE itself
+			RemoveHotKey(TWindowsMenu(biGadget)._hotKey)
+			RemoveHotKey(TWindowsMenu(boGadget)._hotKey)
+		?
+
 		CreateMenu "",0,edit
 		CreateMenu "{{menu_edit_find}}",MENUFIND,edit,KEY_F,MENUMOD
 ?MacOS
