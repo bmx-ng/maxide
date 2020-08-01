@@ -7740,6 +7740,7 @@ Type TCodePlay
 ?ppc
 				EnableMenu ppcenable
 ?
+				EnableMenu arm64enable
 			Case MENUIOSENABLED
 				EnableMenu x86enable
 				EnableMenu x64enable
@@ -7747,6 +7748,7 @@ Type TCodePlay
 				EnableMenu arm64enable
 			Case MENURASPBERRYPIENABLED
 				EnableMenu armenable
+				EnableMenu arm64enable
 			Case MENUANDROIDENABLED
 				EnableMenu x86enable
 				EnableMenu x64enable
@@ -7821,6 +7823,9 @@ Type TCodePlay
 ?ppc
 				CheckMenu ppcenable
 				architectureenabled[MENUPPCENABLED - ARCHITECTUREOFFSET] = True
+?arm64
+				CheckMenu arm64enable
+				architectureenabled[MENUARM64ENABLED - ARCHITECTUREOFFSET] = True
 ?
 			Case MENUIOSENABLED
 ?x86
@@ -7831,8 +7836,13 @@ Type TCodePlay
 				architectureenabled[MENUX64ENABLED - ARCHITECTUREOFFSET] = True
 ?
 			Case MENURASPBERRYPIENABLED
+?arm
 				CheckMenu armenable
 				architectureenabled[MENUARMENABLED - ARCHITECTUREOFFSET] = True
+?arm64
+				CheckMenu arm64enable
+				architectureenabled[MENUARM64ENABLED - ARCHITECTUREOFFSET] = True
+?
 			Case MENUANDROIDENABLED
 				CheckMenu armeabiv5enable
 				architectureenabled[MENUARMEABIV5ENABLED - ARCHITECTUREOFFSET] = True
