@@ -262,6 +262,11 @@ Global codeplay:TCodePlay
 
 Global defaultLanguage:TMaxGUILanguage = LoadLanguage( DEFAULT_LANGUAGEPATH )
 
+'(try to) create a .desktop file on Linux systems
+?Linux
+CreateDesktopFile()
+?
+
 SetLocalizationLanguage( defaultLanguage )
 SetLocalizationMode( LOCALIZATION_ON|LOCALIZATION_OVERRIDE )
 
@@ -273,6 +278,23 @@ While codeplay.running
 Wend
 
 End
+
+?Linux
+Function CreateDesktopFile()
+	Local cwd:String = CurrentDir()
+	local file:TStream = WriteStream("MaxIDE.desktop")
+	if file
+		file.WriteLine("[Desktop Entry]")
+		file.WriteLine("Name="+IDE_NAME +" " + IDE_VERSION) 
+		file.WriteLine("Exec="+cwd+"/maxide") 
+		file.WriteLine("Icon="+cwd+"/maxide_icon.png") 
+		file.WriteLine("Type=Application") 
+		file.WriteLine("Categories=Development;")
+		file.Close()
+		file = Null
+	endif
+End Function
+?
 
 Function Quote$(a$)		'add quotes to arg if spaces found
 	Local	p
