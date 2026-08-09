@@ -7663,6 +7663,13 @@ Type TCodePlay
 				CheckMenu nxenable
 		End Select
 
+		'hide not available platforms
+		'for now emscripten/"web" is not available
+		DisableMenu emscriptenenable
+		HideGadget emscriptenenable
+		DisableMenu jsenable
+		HideGadget jsenable
+
 		UpdateArchitectureMenuState menu
 
 		If platformChanged Then
