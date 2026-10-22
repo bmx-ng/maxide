@@ -44,6 +44,7 @@ Import brl.eventqueue
 Import brl.filesystem
 Import brl.system
 Import brl.ramstream
+Import brl.bankstream
 Import pub.freeprocess
 Import brl.pngloader
 Import brl.timer
@@ -8078,10 +8079,11 @@ EndType
 
 Function CacheAndLoadText$(url:Object)
 	Local tmpResult$
-	Local tmpBytes:Byte[] = LoadByteArray(url)
-	url = CreateRamStream( tmpBytes, tmpBytes.length, True, False )
-	tmpResult = LoadText(url)
-	TRamStream(url).Close()
+	' A bank stream holds a reference to its bank, so the buffer can't be
+	' collected mid-read (a RAM stream over a Byte[] only keeps a raw pointer).
+	Local tmpStream:TStream = CreateBankStream( LoadBank(url) )
+	tmpResult = LoadText(tmpStream)
+	tmpStream.Close()
 	Return tmpResult
 EndFunction
 
