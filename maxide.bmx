@@ -3849,6 +3849,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 	Field	wpipe:TTextStream
 
 	Field	user$,cmdline$,err$,post$
+	Field	outline$	'unterminated stdout text, scanned for compiler errors
 	Field	errbuffer:TByteBuffer
 	Field	outputmenu:TGadget
 	Field	posttool:TTool
@@ -3887,6 +3888,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		If Not output Open()
 		If Not mess$ mess$=cmd$
 		err$=""
+		outline$=""
 		post$=exe
 		posttool=owner
 		host.SelectPanel Self
@@ -4040,8 +4042,8 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			host.DebugExit
 			host.SelectPanel Self
 
-			If err
-				host.ParseError err
+			If err And host.ParseError(err)
+				' a real error was reported; skip the post-build action
 			Else
 				If post$
 					Local menuaction=Int(post)
@@ -4068,6 +4070,21 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 		EndIf
 	End Method
 
+	' bcc reports its errors on stdout, so pick error lines out of it for ParseError
+	Method CollectStdoutErrors(text$)
+		outline:+text
+		Local p=outline.FindLast("~n")
+		If p=-1
+			If outline.length>65536 outline=""
+			Return
+		EndIf
+		For Local l$=EachIn outline[..p].Split("~n")
+			Local ll$=l.ToLower()
+			If ll.Find(": error")<>-1 Or ll.Find(": fatal error")<>-1 err:+l+"~n"
+		Next
+		outline=outline[p+1..]
+	End Method
+
 	Method ReadPipes(pipe:TPipeStream,errpipe:TPipeStream)
 		Local	status
 		Local	bytes:Byte[],line$
@@ -4077,6 +4094,7 @@ Type TOutputPanel Extends TToolPanel	'used build and run
 			line$=String.FromUTF8Bytes(bytes,Len bytes)
 			line=line.Replace(Chr(13),"")
 			Write line
+			CollectStdoutErrors line
 		EndIf
 
 		If errpipe.ReadAvail() Then
@@ -6464,7 +6482,7 @@ Type TCodePlay
 		EndIf
 	End Method
 
-	Method ParseError(err$)
+	Method ParseError:Int(err$)
 		Local		mess$,file$,p,q
 		Local		line,column
 ' bcc error
@@ -6489,7 +6507,7 @@ Type TCodePlay
 			EndIf
 			Notify LocalizeString("{{output_error_compileerror}}").Replace("%1",mess)
 			SetStatus mess
-			Return
+			Return True
 		EndIf
 ' gcc error
 		err=err.Replace(EOL+"   "," ")
@@ -6498,6 +6516,9 @@ Type TCodePlay
 			If p=-1 p:+err.length	'equiv. to p=err.length-1 ;-)
 			mess=err[..p]
 			err=err[p+1..]
+			' stderr also carries C compiler and bcc warnings; only errors are reported
+			Local lmess$=mess.ToLower()
+			If lmess.Find(": error")=-1 And lmess.Find(": fatal error")=-1 Continue
 			p=0
 			Repeat
 				p=mess.Find(":",p)+1
@@ -6508,9 +6529,16 @@ Type TCodePlay
 					line=Int(mess[p..q])
 					If line
 						mess=mess[q+1..]
+						' clang and bcc also give a column: "file:line:col: message"
+						Local c=mess.Find(":")
+						If c>0 And String(Int(mess[..c]))=mess[..c]
+							column=Int(mess[..c])
+							mess=mess[c+1..]
+						EndIf
+						mess=mess.Trim()
 						SelectError file,column,line
 						Notify LocalizeString("{{output_error_compileerror}}").Replace("%1",mess)
-						Return
+						Return True
 					EndIf
 					p=q+1
 				EndIf
